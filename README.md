@@ -12,7 +12,7 @@ npm i remap-css
 const remapCss = require("remap-css");
 const css = await remapCss([{css: "a {color: red;}"}], {"color: red": "color: blue"});
 // a {
-// color: blue;
+//   color: blue;
 // }
 ```
 
