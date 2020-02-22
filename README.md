@@ -1,0 +1,46 @@
+# remap-css
+[![](https://img.shields.io/npm/v/remap-css.svg?style=flat)](https://www.npmjs.org/package/remap-css) [![](https://img.shields.io/npm/dm/remap-css.svg)](https://www.npmjs.org/package/remap-css) [![](https://api.travis-ci.org/silverwind/remap-css.svg?style=flat)](https://travis-ci.org/silverwind/remap-css)
+> Remap CSS rules based on declaration value
+
+## Usage
+
+```console
+$ npm i --save-dev remap-css
+```
+
+```js
+const remapCss = require("remap-css");
+const css = remapCss([{css: "a {color: red;}"}], {"color: red": "color: blue"}, {comments: false});
+// a {
+// color: blue;
+// }
+```
+
+## API
+
+### `remapCss(sources, mappings, [opts])`
+
+- `sources`: *Array* Array of sources
+  - `source`: *Object* Object describing a CSS source
+    - `css`: *string* A CSS string
+    - `prefix`: *string* A CSS selector to be prefixed to all output rules
+    - `match`: *string* A array of plain CSS selectors that prevent a prefix addition on exact match
+- `mappings`: *Object* Array of CSS declaration value-to-value mapping. The object key is a exact match CSS declaration and value is the corresponding replacement declaration.
+- `options`: *Object*
+  - `indentDeclaration`: *number* Numbers of spaces to indent declarations. Default: `2`.
+  - `indentCss`: *number* Numbers of spaces to indent the output CSS. Default: `0`.
+  - `lineLength`: *number* Number of characters after which to wrap lines. Default: `80`.
+  - `ignoreSelectors`: *Array* of *string* Array of exact CSS selectors to ignore. Default: `[]`.
+  - `limitSpecial`: *number* Maximum amount of iteration per special mappings. Default: `25`.
+  - `deviceType`: *string* CSS media query device type to match. Default: `"screen"`.
+  - `deviceWidth`: "string" CSS media query device width to match. Default: `"1024px"`.
+  - `comments`: *boolean* Whether to output comments. Default: `true`.
+
+There are special mapping keys supported to reduce the need for similar `border` and `background rules:
+
+- `$border: value`: Variations of border-colors
+- `$background: value` Variations of background-colors
+
+On special rules, only specify the replacement value alone (not the declaration).
+
+© [silverwind](https://github.com/silverwind), distributed under BSD licence

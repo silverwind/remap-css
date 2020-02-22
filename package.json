@@ -1,0 +1,37 @@
+{
+  "name": "remap-css",
+  "version": "1.0.0",
+  "description": "Remap CSS rules based on declaration value",
+  "author": "silverwind",
+  "repository": "silverwind/remap-css",
+  "license": "BSD-2-Clause",
+  "main": "index.js",
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "keywords": [
+    "remap",
+    "css",
+    "dark",
+    "theme"
+  ],
+  "files": [
+    "index.js"
+  ],
+  "dependencies": {
+    "css": "2.2.4",
+    "css-color-names": "1.0.1",
+    "css-mediaquery": "0.1.2",
+    "css-shorthand-properties": "1.1.1",
+    "perfectionist": "2.4.0"
+  },
+  "devDependencies": {
+    "eslint": "6.7.2",
+    "eslint-config-silverwind": "5.0.3",
+    "updates": "9.3.3",
+    "versions": "7.0.4"
+  }
+}
