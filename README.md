@@ -36,7 +36,7 @@ const css = remapCss([{css: "a {color: red;}"}], {"color: red": "color: blue"}, 
   - `deviceWidth`: "string" CSS media query device width to match. Default: `"1024px"`.
   - `comments`: *boolean* Whether to output comments. Default: `true`.
 
-There are special mapping keys supported to reduce the need for similar `border` and `background rules:
+There are special mapping keys supported to reduce the need for similar `border` and `background` rules:
 
 - `$border: value`: Variations of border-colors
 - `$background: value` Variations of background-colors
