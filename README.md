@@ -43,6 +43,8 @@ There are special mapping keys supported to reduce the need for similar `border`
 
 On special rules, only specify the replacement value alone (not the declaration).
 
+Returns a promise that resolves to a CSS string.
+
 ## Related
 
 - [fetch-css](https://github.com/silverwind/fetch-css) - Extract CSS from websites and browser extensions
