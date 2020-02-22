@@ -147,6 +147,7 @@ function prepareMappings(mappings, opts) {
       const oldValue = key.substring("$border: ".length);
       newMappings[`border-color: ${oldValue}`] = `border-color: ${value}`;
       newMappings[`border: solid ${oldValue}`] = `border-color: ${value}`;
+      newMappings[`border: dashed ${oldValue}`] = `border-color: ${value}`;
       newMappings[`border-top-color: ${oldValue}`] = `border-top-color: ${value}`;
       newMappings[`border-bottom-color: ${oldValue}`] = `border-bottom-color: ${value}`;
       newMappings[`border-left-color: ${oldValue}`] = `border-left-color: ${value}`;
@@ -155,9 +156,13 @@ function prepareMappings(mappings, opts) {
         newMappings[`border: ${i}px solid ${oldValue}`] = `border-color: ${value}`;
         newMappings[`border: ${i}px dashed ${oldValue}`] = `border-color: ${value}`;
         newMappings[`border-top: ${i}px solid ${oldValue}`] = `border-top-color: ${value}`;
+        newMappings[`border-top: ${i}px dashed ${oldValue}`] = `border-top-color: ${value}`;
         newMappings[`border-bottom: ${i}px solid ${oldValue}`] = `border-bottom-color: ${value}`;
+        newMappings[`border-bottom: ${i}px dashed ${oldValue}`] = `border-bottom-color: ${value}`;
         newMappings[`border-left: ${i}px solid ${oldValue}`] = `border-left-color: ${value}`;
+        newMappings[`border-left: ${i}px dashed ${oldValue}`] = `border-left-color: ${value}`;
         newMappings[`border-right: ${i}px solid ${oldValue}`] = `border-right-color: ${value}`;
+        newMappings[`border-right: ${i}px dashed ${oldValue}`] = `border-right-color: ${value}`;
       }
     } else if (key.startsWith("$background: ")) {
       const oldValue = key.substring("$background: ".length);
