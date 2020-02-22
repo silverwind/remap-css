@@ -5,7 +5,7 @@
 ## Usage
 
 ```console
-$ npm i --save-dev remap-css
+npm i remap-css
 ```
 
 ```js
