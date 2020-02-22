@@ -223,7 +223,7 @@ function buildOutput(decls, mappings, opts) {
         normalSelectors = normalSelectors.filter(selector => !normalUnmergeables.includes(selector));
       }
       if (normalSelectors.length || normalUnmergeables.length) {
-        output += opts.comments ? `/* remap-css rule for "${fromValue}" */\n` : "";
+        output += (opts.comments ? `/* remap-css rule for "${fromValue}" */\n` : "");
       }
       if (normalSelectors.length) output += format(`${normalSelectors.join(",")} {${newValue};}`, opts);
       if (normalUnmergeables.length) output += unmergeableRules(normalUnmergeables, newValue, opts);
@@ -237,13 +237,13 @@ function buildOutput(decls, mappings, opts) {
         importantSelectors = importantSelectors.filter(selector => !importantUnmergeables.includes(selector));
       }
       if (importantSelectors.length || importantUnmergeables.length) {
-        output += opts.comments ? `/* remap-css rule for "${fromValue} !important" */\n` : 0;
+        output += (opts.comments ? `/* remap-css rule for "${fromValue} !important" */\n` : "");
       }
       if (importantSelectors.length) output += format(`${importantSelectors.join(",")} {${newValue};}`, opts);
       if (importantUnmergeables.length) output += unmergeableRules(importantUnmergeables, newValue, opts);
     }
   }
-  output += opts.comments ? "/* end remap-css rules */" : "";
+  output += (opts.comments ? "/* end remap-css rules */" : "");
   const indent = " ".repeat(opts.indentCss);
   return output.split("\n").map(line => `${indent}${line}`).join("\n");
 }
