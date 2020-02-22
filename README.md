@@ -10,7 +10,7 @@ npm i remap-css
 
 ```js
 const remapCss = require("remap-css");
-const css = remapCss([{css: "a {color: red;}"}], {"color: red": "color: blue"}, {comments: false});
+const css = remapCss([{css: "a {color: red;}"}], {"color: red": "color: blue"});
 // a {
 // color: blue;
 // }
@@ -34,7 +34,7 @@ const css = remapCss([{css: "a {color: red;}"}], {"color: red": "color: blue"}, 
   - `limitSpecial`: *number* Maximum amount of iteration per special mappings. Default: `25`.
   - `deviceType`: *string* CSS media query device type to match. Default: `"screen"`.
   - `deviceWidth`: "string" CSS media query device width to match. Default: `"1024px"`.
-  - `comments`: *boolean* Whether to output comments. Default: `true`.
+  - `comments`: *boolean* Whether to output comments. Default: `false`.
 
 There are special mapping keys supported to reduce the need for similar `border` and `background` rules:
 

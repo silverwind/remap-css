@@ -14,7 +14,7 @@ const defaultOpts = {
   limitSpecial: 25,
   deviceType: "screen",
   deviceWidth: "1024px",
-  comments: true,
+  comments: false,
 };
 
 function mediaMatches(query, opts) {
