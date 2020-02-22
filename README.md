@@ -21,7 +21,7 @@ const css = await remapCss([{css: "a {color: red;}"}], {"color: red": "color: bl
 ### `remapCss(sources, mappings, [opts])`
 
 - `sources`: *Array* Array of sources
-  - `source`: *Object* Object describing a CSS source
+  - `source`: *Object*
     - `css`: *string* A CSS string
     - `prefix`: *string* A CSS selector to be prefixed to all output rules
     - `match`: *string* A array of plain CSS selectors that prevent a prefix addition on exact match
