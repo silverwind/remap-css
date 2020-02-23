@@ -11,7 +11,15 @@ function u(str) {
   return str;
 }
 
+const compare = (a, b) => expect(u(a)).toEqual(u(b));
+
 test("remaps correctly", async () => {
+  {
+    const sources = [];
+    const mappings = {};
+    const expected = "";
+    compare(await remapCss(sources, mappings), expected);
+  }
   {
     const sources = [{css: "a {color: red;}"}];
     const mappings = {"color: red": "color: blue"};
@@ -20,7 +28,7 @@ test("remaps correctly", async () => {
         color: blue;
       }
     `;
-    expect(u(await remapCss(sources, mappings))).toEqual(u(expected));
+    compare(await remapCss(sources, mappings), expected);
   }
   {
     const sources = [{css: "a {border-left-color: red;}"}];
@@ -30,6 +38,6 @@ test("remaps correctly", async () => {
         border-left-color: blue;
       }
     `;
-    expect(u(await remapCss(sources, mappings))).toEqual(u(expected));
+    compare(await remapCss(sources, mappings), expected);
   }
 });
