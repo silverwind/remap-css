@@ -63,7 +63,7 @@ function parseRule(decls, rule, props, source, opts) {
       // stylistic tweaks
       selector = selector
         .replace(/\+/g, " + ")
-        .replace(/~[^=]/g, " ~ ")
+        .replace(/(~)([^=])/g, (_, m1, m2) => ` ${m1} ${m2}`)
         .replace(/>/g, " > ")
         .replace(/ {2,}/g, " ")
         .replace(/'/g, `"`)
