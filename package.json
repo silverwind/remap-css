@@ -31,7 +31,11 @@
   "devDependencies": {
     "eslint": "6.7.2",
     "eslint-config-silverwind": "5.0.3",
+    "jest": "25.1.0",
     "updates": "9.3.3",
     "versions": "7.0.4"
+  },
+  "jest": {
+    "verbose": false
   }
 }
