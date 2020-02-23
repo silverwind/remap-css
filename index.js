@@ -219,8 +219,8 @@ function buildOutput(decls, mappings, opts) {
   let output = opts.comments ? "/* begin remap-css rules */\n" : "";
 
   for (const [fromValue, toValue] of Object.entries(mappings)) {
-    let normalSelectors = Array.from(decls[fromValue] || []);
-    let importantSelectors = Array.from(decls[`${fromValue} !important`] || []);
+    let normalSelectors = Array.from(decls[fromValue] || []).sort();
+    let importantSelectors = Array.from(decls[`${fromValue} !important`] || []).sort();
 
     if (normalSelectors && normalSelectors.length) {
       const newValue = toValue.trim().replace(/;$/, "");
