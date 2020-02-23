@@ -167,8 +167,12 @@ function prepareMappings(mappings, opts) {
     } else if (key.startsWith("$background: ")) {
       const oldValue = key.substring("$background: ".length);
       newMappings[`background: ${oldValue}`] = `background: ${value}`;
+      newMappings[`background: ${oldValue} none`] = `background: ${value}`;
+      newMappings[`background: none ${oldValue}`] = `background: ${value}`;
       newMappings[`background-color: ${oldValue}`] = `background-color: ${value}`;
       newMappings[`background-image: ${oldValue}`] = `background-image: ${value}`;
+      newMappings[`background-image: ${oldValue} none`] = `background-image: ${value}`;
+      newMappings[`background-image: none ${oldValue}`] = `background-image: ${value}`;
     } else {
       newMappings[key] = value;
     }
