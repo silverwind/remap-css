@@ -35,6 +35,7 @@ const css = await remapCss([{css: "a {color: red;}"}], {"color: red": "color: bl
   - `deviceType`: *string* CSS media query device type to match. Default: `"screen"`.
   - `deviceWidth`: "string" CSS media query device width to match. Default: `"1024px"`.
   - `comments`: *boolean* Whether to output comments. Default: `false`.
+  - `stylistic`: *boolean* Whether to perform stylistic tweaks on selectors. Default: `false`.
 
 There are special mapping keys supported to reduce the need for similar `border` and `background` rules:
 

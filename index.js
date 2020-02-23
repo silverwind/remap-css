@@ -15,6 +15,7 @@ const defaultOpts = {
   deviceType: "screen",
   deviceWidth: "1024px",
   comments: false,
+  stylistic: false,
 };
 
 function mediaMatches(query, opts) {
@@ -61,13 +62,15 @@ function parseRule(decls, rule, props, source, opts) {
       if (opts.ignoreSelectors.some(re => re.test(selector))) return;
 
       // stylistic tweaks
-      selector = selector
-        .replace(/\+/g, " + ")
-        .replace(/(~)([^=])/g, (_, m1, m2) => ` ${m1} ${m2}`)
-        .replace(/>/g, " > ")
-        .replace(/ {2,}/g, " ")
-        .replace(/'/g, `"`)
-        .replace(/([^:]):(before|after)/g, (_, m1, m2) => `${m1}::${m2}`); // css parser seems to emit "::" as ":"
+      if (opts.stylistic) {
+        selector = selector
+          .replace(/\+/g, " + ")
+          .replace(/(~)([^=])/g, (_, m1, m2) => ` ${m1} ${m2}`)
+          .replace(/>/g, " > ")
+          .replace(/ {2,}/g, " ")
+          .replace(/'/g, `"`)
+          .replace(/([^:]):(before|after)/g, (_, m1, m2) => `${m1}::${m2}`); // css parser seems to emit "::" as ":"
+      }
 
       // add prefix
       if (source.prefix) {
