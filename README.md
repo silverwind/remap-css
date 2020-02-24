@@ -30,7 +30,7 @@ const css = await remapCss([{css: "a {color: red;}"}], {"color: red": "color: bl
   - `indentDeclaration`: *number* Numbers of spaces to indent declarations. Default: `2`.
   - `indentCss`: *number* Numbers of spaces to indent the output CSS. Default: `0`.
   - `lineLength`: *number* Number of characters after which to wrap lines. Default: `80`.
-  - `ignoreSelectors`: *Array* of *RegExp* Array of RegExp for selectors to ignore. Default: `[]`.
+  - `ignoreSelectors`: *Array* of *RegExp* Regular expressions of selectors to ignore. Default: `[]`.
   - `limitSpecial`: *number* Maximum amount of iteration per special mappings. Default: `25`.
   - `deviceType`: *string* CSS media query device type to match. Default: `"screen"`.
   - `deviceWidth`: "string" CSS media query device width to match. Default: `"1024px"`.
