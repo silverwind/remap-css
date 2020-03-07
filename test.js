@@ -3,7 +3,7 @@
 const remapCss = require(".");
 const {test, expect} = global;
 
-function u(str) {
+function unintend(str) {
   str = str.replace(/^\n/, "").replace(/\n +$/g, "\n");
   const indent = (/^ +/.exec(str.split(/\n/)[0]) || [[]])[0].length;
   const re = new RegExp(`^ {${indent}}`);
@@ -11,33 +11,23 @@ function u(str) {
   return str;
 }
 
-const compare = (a, b) => expect(u(a)).toEqual(u(b));
+const makeTest = (sources, mappings, expected) => {
+  return async () => {
+    const output = await remapCss(sources, mappings, expected);
+    return expect(unintend(output)).toEqual(unintend(expected));
+  };
+};
 
-test("remaps correctly", async () => {
-  {
-    const sources = [];
-    const mappings = {};
-    const expected = "";
-    compare(await remapCss(sources, mappings), expected);
+test("no input", makeTest([], {}, ""));
+
+test("basic", makeTest([{css: "a {color: red;}"}], {"color: red": "color: blue"}, `
+  a {
+    color: blue;
   }
-  {
-    const sources = [{css: "a {color: red;}"}];
-    const mappings = {"color: red": "color: blue"};
-    const expected = `
-      a {
-        color: blue;
-      }
-    `;
-    compare(await remapCss(sources, mappings), expected);
+`));
+
+test("special rule", makeTest([{css: "a {border-left-color: red;}"}], {"$border: red": "blue"}, `
+  a {
+    border-left-color: blue;
   }
-  {
-    const sources = [{css: "a {border-left-color: red;}"}];
-    const mappings = {"$border: red": "blue"};
-    const expected = `
-      a {
-        border-left-color: blue;
-      }
-    `;
-    compare(await remapCss(sources, mappings), expected);
-  }
-});
+`));
