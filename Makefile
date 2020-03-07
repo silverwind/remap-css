@@ -1,6 +1,6 @@
 test:
-	yarn -s run eslint .
-	yarn -s run jest
+	yarn -s run eslint --color .
+	yarn -s run jest --color
 
 publish:
 	git push -u --tags origin master
