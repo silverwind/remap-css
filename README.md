@@ -1,5 +1,5 @@
 # remap-css
-[![](https://img.shields.io/npm/v/remap-css.svg?style=flat)](https://www.npmjs.org/package/remap-css) [![](https://img.shields.io/npm/dm/remap-css.svg)](https://www.npmjs.org/package/remap-css) [![](https://api.travis-ci.org/silverwind/remap-css.svg?style=flat)](https://travis-ci.org/silverwind/remap-css)
+[![](https://img.shields.io/npm/v/remap-css.svg?style=flat)](https://www.npmjs.org/package/remap-css) [![](https://img.shields.io/npm/dm/remap-css.svg)](https://www.npmjs.org/package/remap-css)
 > Remap CSS rules based on declaration value
 
 ## Usage
