@@ -24,7 +24,7 @@ function mediaMatches(query, opts) {
   const {deviceType: type, deviceWidth: width} = opts;
   try {
     return cssMediaQuery.match(query, {type, width});
-  } catch (err) {
+  } catch {
     return true; // this library has a few bugs. In case of error, we include the rule.
   }
 }
