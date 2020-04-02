@@ -256,8 +256,8 @@ function buildOutput(decls, mappings, opts) {
     const importantSelectors = Array.from(decls[`${fromValue} !important`] || []).sort();
 
     if (opts.combine) {
-      output += generateOutput(normalSelectors, fromValue, normalNewValue, opts);
-      output += generateOutput(importantSelectors, fromValue, importantNewValue, opts);
+      output += generateOutput(normalSelectors, normalFromValue, normalNewValue, opts);
+      output += generateOutput(importantSelectors, importantFromValue, importantNewValue, opts);
     } else {
       for (const selector of normalSelectors) output += generateOutput([selector], normalFromValue, normalNewValue, opts);
       for (const selector of importantSelectors) output += generateOutput([selector], importantFromValue, normalNewValue, opts);
