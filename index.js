@@ -38,8 +38,10 @@ function parseDeclarations(source, props, opts) {
       rule.rules.forEach(rule => parseRule(decls, rule, props, source, opts));
     }
 
-    if (!rule.selectors || rule.selectors.length === 0) return;
-    parseRule(decls, rule, props, source, opts);
+    const selectors = (rule.selectors || []).filter(v => !!v);
+    if (selectors && selectors.length) {
+      parseRule(decls, rule, props, source, opts);
+    }
   });
 
   return decls;
@@ -60,9 +62,6 @@ function parseRule(decls, rule, props, source, opts) {
     if (!decls[name]) decls[name] = new Set();
 
     for (let selector of rule.selectors) {
-      // bug in 'css' module can output empty string selectors
-      if (!selector) continue;
-
       // Skip ignored selectors
       if (opts.ignoreSelectors.some(re => re.test(selector))) continue;
 
