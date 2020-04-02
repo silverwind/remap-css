@@ -11,23 +11,114 @@ function unintend(str) {
   return str;
 }
 
-const makeTest = (sources, mappings, expected) => {
+const makeTest = ({sources, mappings, opts, expected}) => {
   return async () => {
-    const output = await remapCss(sources, mappings, expected);
+    const output = await remapCss(sources, mappings, opts);
     return expect(unintend(output)).toEqual(unintend(expected));
   };
 };
 
-test("no input", makeTest([], {}, ""));
+test("no input", makeTest({
+  sources: [],
+  mappings: {},
+  expected: "",
+}));
 
-test("basic", makeTest([{css: "a {color: red;}"}], {"color: red": "color: blue"}, `
-  a {
-    color: blue;
-  }
-`));
+test("basic", makeTest({
+  sources: [{css: `
+    a {color: red;}
+  `}],
+  mappings: {
+    "color: red": "color: blue",
+  },
+  expected: `
+    a {
+      color: blue;
+    }
+`}));
 
-test("special rule", makeTest([{css: "a {border-left-color: red;}"}], {"$border: red": "blue"}, `
-  a {
-    border-left-color: blue;
-  }
-`));
+test("special rule", makeTest({
+  sources: [{css: `
+    a {border-left-color: red;}
+  `}],
+  mappings: {
+    "$border: red": "blue",
+  },
+  expected: `
+    a {
+      border-left-color: blue;
+    }
+`}));
+
+test("mappings order", makeTest({
+  sources: [{css: `
+    a {background: red;}
+    b {background: red;}
+    a {background: yellow;}
+    b {background: yellow;}
+  `}],
+  mappings: {
+    "background: yellow": "background: green",
+    "background: red": "background: blue",
+  },
+  expected: `
+    a, b {
+      background: green;
+    }
+    a, b {
+      background: blue;
+    }
+`}));
+
+test("source order", makeTest({
+  sources: [{css: `
+    a {background: red;}
+    b {background: red;}
+    a {background: yellow;}
+    b {background: yellow;}
+  `}],
+  mappings: {
+    "background: yellow": "background: green",
+    "background: red": "background: blue",
+  },
+  opts: {
+    order: "source",
+  },
+  expected: `
+    a, b {
+      background: blue;
+    }
+    a, b {
+      background: green;
+    }
+`}));
+
+test("source order, no combine", makeTest({
+  sources: [{css: `
+    a {background: red;}
+    b {background: yellow;}
+    c {background: yellow;}
+    d {background: red;}
+  `}],
+  mappings: {
+    "background: yellow": "background: green",
+    "background: red": "background: blue",
+  },
+  opts: {
+    order: "source",
+    combine: false,
+  },
+  expected: `
+    a {
+      background: blue;
+    }
+    d {
+      background: blue;
+    }
+    b {
+      background: green;
+    }
+    c {
+      background: green;
+    }
+`}));

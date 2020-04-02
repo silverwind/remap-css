@@ -16,6 +16,8 @@ const defaultOpts = {
   deviceWidth: "1024px",
   comments: false,
   stylistic: false,
+  order: "mappings",
+  combine: true,
 };
 
 function mediaMatches(query, opts) {
@@ -57,9 +59,12 @@ function parseRule(decls, rule, props, source, opts) {
 
     if (!decls[name]) decls[name] = new Set();
 
-    rule.selectors.forEach(selector => {
+    for (let selector of rule.selectors) {
+      // bug in 'css' module can output empty string selectors
+      if (!selector) continue;
+
       // Skip ignored selectors
-      if (opts.ignoreSelectors.some(re => re.test(selector))) return;
+      if (opts.ignoreSelectors.some(re => re.test(selector))) continue;
 
       // stylistic tweaks
       if (opts.stylistic) {
@@ -98,7 +103,7 @@ function parseRule(decls, rule, props, source, opts) {
 
       // add the selector to the selector list for this mapping
       decls[name].add(selector);
-    });
+    }
   }
 }
 
@@ -155,7 +160,7 @@ function prepareMappings(mappings, opts) {
       newMappings[`border-bottom-color: ${oldValue}`] = `border-bottom-color: ${value}`;
       newMappings[`border-left-color: ${oldValue}`] = `border-left-color: ${value}`;
       newMappings[`border-right-color: ${oldValue}`] = `border-right-color: ${value}`;
-      for (let i = 1; i < opts.limitSpecial; i++) {
+      for (let i = 1; i <= opts.limitSpecial; i++) {
         newMappings[`border: ${i}px solid ${oldValue}`] = `border-color: ${value}`;
         newMappings[`border: ${i}px dashed ${oldValue}`] = `border-color: ${value}`;
         newMappings[`border-top: ${i}px solid ${oldValue}`] = `border-top-color: ${value}`;
@@ -189,7 +194,7 @@ function format(css, opts) {
   return String(perfectionist.process(css, {indentSize, maxSelectorLength}));
 }
 
-function unmergeables(selectors) {
+function getUnmergeables(selectors) {
   return selectors.filter(selector => /-(moz|ms|webkit)-.+/.test(selector));
 }
 
@@ -215,39 +220,44 @@ function unmergeableRules(selectors, value, opts) {
   return ret;
 }
 
+function getNewValue(toValue, important) {
+  if (important) {
+    return toValue.trim().replace(/;$/, "").split(";").map(v => `${v} !important`).join(";");
+  } else {
+    return toValue.trim().replace(/;$/, "");
+  }
+}
+
+function generateOutput(selectors, fromValue, newValue, opts) {
+  let output = "";
+  if (!selectors || !selectors.length) return output;
+  const unmergeables = getUnmergeables(selectors);
+  if (unmergeables.length) selectors = selectors.filter(selector => !unmergeables.includes(selector));
+  if (selectors.length || unmergeables.length) output += (opts.comments ? `/* remap-css rule for "${fromValue}" */\n` : "");
+  if (selectors.length) output += format(`${selectors.join(",")} {${newValue};}`, opts);
+  if (unmergeables.length) output += unmergeableRules(unmergeables, newValue, opts);
+  return output;
+}
+
 function buildOutput(decls, mappings, opts) {
+  const sourceOrder = opts.order === "source";
   let output = opts.comments ? "/* begin remap-css rules */\n" : "";
 
-  for (const [fromValue, toValue] of Object.entries(mappings)) {
-    let normalSelectors = Array.from(decls[fromValue] || []).sort();
-    let importantSelectors = Array.from(decls[`${fromValue} !important`] || []).sort();
+  for (let [fromValue, toValue] of Object.entries(sourceOrder ? decls : mappings)) {
+    if (sourceOrder) toValue = mappings[fromValue];
 
-    if (normalSelectors && normalSelectors.length) {
-      const newValue = toValue.trim().replace(/;$/, "");
-      const normalUnmergeables = unmergeables(normalSelectors);
+    const normalNewValue = getNewValue(toValue.trim(), false);
+    const importantNewValue = getNewValue(toValue.trim(), true);
 
-      if (normalUnmergeables.length) {
-        normalSelectors = normalSelectors.filter(selector => !normalUnmergeables.includes(selector));
-      }
-      if (normalSelectors.length || normalUnmergeables.length) {
-        output += (opts.comments ? `/* remap-css rule for "${fromValue}" */\n` : "");
-      }
-      if (normalSelectors.length) output += format(`${normalSelectors.join(",")} {${newValue};}`, opts);
-      if (normalUnmergeables.length) output += unmergeableRules(normalUnmergeables, newValue, opts);
-    }
+    const normalSelectors = Array.from(decls[fromValue] || []).sort();
+    const importantSelectors = Array.from(decls[`${fromValue} !important`] || []).sort();
 
-    if (importantSelectors && importantSelectors.length) {
-      const newValue = toValue.trim().replace(/;$/, "").split(";").map(v => `${v} !important`).join(";");
-      const importantUnmergeables = unmergeables(importantSelectors);
-
-      if (importantUnmergeables.length) {
-        importantSelectors = importantSelectors.filter(selector => !importantUnmergeables.includes(selector));
-      }
-      if (importantSelectors.length || importantUnmergeables.length) {
-        output += (opts.comments ? `/* remap-css rule for "${fromValue} !important" */\n` : "");
-      }
-      if (importantSelectors.length) output += format(`${importantSelectors.join(",")} {${newValue};}`, opts);
-      if (importantUnmergeables.length) output += unmergeableRules(importantUnmergeables, newValue, opts);
+    if (opts.combine) {
+      output += generateOutput(normalSelectors, fromValue, normalNewValue, opts);
+      output += generateOutput(importantSelectors, fromValue, importantNewValue, opts);
+    } else {
+      for (const selector of normalSelectors) output += generateOutput([selector], fromValue, normalNewValue, opts);
+      for (const selector of importantSelectors) output += generateOutput([selector], fromValue, normalNewValue, opts);
     }
   }
   output += (opts.comments ? "/* end remap-css rules */" : "");
