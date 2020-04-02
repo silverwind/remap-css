@@ -6,7 +6,7 @@ const cssColorNames = require("css-color-names");
 const perfectionist = require("perfectionist");
 const {isShorthand} = require("css-shorthand-properties");
 
-const defaultOpts = {
+const defaults = {
   indentDeclaration: 2,
   indentCss: 0,
   lineLength: 80,
@@ -269,7 +269,7 @@ function buildOutput(decls, mappings, opts) {
 }
 
 module.exports = async function remapCss(sources, mappingsArg, opts = {}) {
-  opts = Object.assign({}, defaultOpts, opts);
+  opts = Object.assign({}, defaults, opts);
   const mappings = prepareMappings(mappingsArg, opts);
 
   const props = {};
