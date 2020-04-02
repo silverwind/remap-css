@@ -246,6 +246,9 @@ function buildOutput(decls, mappings, opts) {
   for (let [fromValue, toValue] of Object.entries(sourceOrder ? decls : mappings)) {
     if (sourceOrder) toValue = mappings[fromValue];
 
+    const normalFromValue = fromValue;
+    const importantFromValue = `${fromValue} !important`;
+
     const normalNewValue = getNewValue(toValue.trim(), false);
     const importantNewValue = getNewValue(toValue.trim(), true);
 
@@ -256,8 +259,8 @@ function buildOutput(decls, mappings, opts) {
       output += generateOutput(normalSelectors, fromValue, normalNewValue, opts);
       output += generateOutput(importantSelectors, fromValue, importantNewValue, opts);
     } else {
-      for (const selector of normalSelectors) output += generateOutput([selector], fromValue, normalNewValue, opts);
-      for (const selector of importantSelectors) output += generateOutput([selector], fromValue, normalNewValue, opts);
+      for (const selector of normalSelectors) output += generateOutput([selector], normalFromValue, normalNewValue, opts);
+      for (const selector of importantSelectors) output += generateOutput([selector], importantFromValue, normalNewValue, opts);
     }
   }
   output += (opts.comments ? "/* end remap-css rules */" : "");
