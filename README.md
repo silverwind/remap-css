@@ -4,7 +4,7 @@
 
 ## Usage
 
-```console
+```bash
 npm i remap-css
 ```
 
@@ -17,8 +17,9 @@ const css = await remapCss([{css: "a {color: red;}"}], {"color: red": "color: bl
 ```
 
 ## API
-
 ### `remapCss(sources, mappings, [opts])`
+
+Returns a `Promise` that resolves to a CSS string.
 
 - `sources`: *Array* Array of sources
   - `source`: *Object*
@@ -46,11 +47,8 @@ There are special mapping keys supported to reduce the need for similar `border`
 
 On special rules, only specify the replacement value alone (not the declaration).
 
-Returns a promise that resolves to a CSS string.
-
 ## Related
 
 - [fetch-css](https://github.com/silverwind/fetch-css) - Extract CSS from websites and browser extensions
-
 
 © [silverwind](https://github.com/silverwind), distributed under BSD licence
