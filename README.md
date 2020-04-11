@@ -26,7 +26,7 @@ Returns a `Promise` that resolves to a CSS string.
     - `css`: *string* A CSS string
     - `prefix`: *string* A CSS selector to be prefixed to all output rules
     - `match`: *string* A array of plain CSS selectors that prevent a prefix addition on exact match
-- `mappings`: *Object* Array of CSS declaration value-to-value mapping. The object key is a exact match CSS declaration and value is the corresponding replacement declaration.
+- `mappings`: *Object* CSS declaration value-to-value mapping. The key is either a exact match CSS declaration or a special rule starting with `$`. The value is the corresponding replacement declaration or a color in the case of a special rule.
 - `options`: *Object*
   - `indentDeclaration`: *number* Numbers of spaces to indent declarations. Default: `2`.
   - `indentCss`: *number* Numbers of spaces to indent the output CSS. Default: `0`.
