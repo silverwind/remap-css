@@ -42,19 +42,19 @@ function getRuleNodes(nodes, opts) {
   return ret;
 }
 
-function parseSource(source, props, opts) {
+function parseSource(source, props, indexData, opts) {
   const decls = {};
   const parsed = postcssSafeParser(source.css);
   const nodes = getRuleNodes(parsed.nodes, opts);
 
   for (const node of nodes) {
-    parseRule(node, decls, props, source, opts);
+    parseRule(node, decls, props, indexData, source, opts);
   }
 
   return decls;
 }
 
-function parseRule(rule, decls, props, source, opts) {
+function parseRule(rule, decls, props, indexData, source, opts) {
   for (const {prop, value, important} of rule.nodes.filter(node => node.type === "decl") || []) {
     if (!props[prop] || !value) continue;
     const normalizedValue = normalize(value, prop);
@@ -67,6 +67,9 @@ function parseRule(rule, decls, props, source, opts) {
     for (let selector of splitCssSelector(rule.selector)) {
       // Skip ignored selectors
       if (opts.ignoreSelectors.some(re => re.test(selector))) continue;
+
+      indexData.indexes[selector] = indexData.index;
+      indexData.index += 1;
 
       // stylistic tweaks
       if (opts.stylistic) {
@@ -120,8 +123,10 @@ function normalizeHexColor(value) {
 }
 
 function normalize(value, prop) {
+  const isImportant = value.trim().endsWith("!important");
+
   value = value
-    // remove !important and trim whitespace
+    // remove important
     .replace(/!important$/g, "").trim()
     // remove leading zeroes on values like 'rgba(27,31,35,0.075)'
     .replace(/0(\.[0-9])/g, (_, val) => val)
@@ -147,47 +152,57 @@ function normalize(value, prop) {
     value = value.split(" ").sort().join(" ");
   }
 
-  return value;
+  return `${value}${isImportant ? " !important" : ""}`;
+}
+
+function addMapping(mappings, fromValue, toValue) {
+  toValue = toValue.trim();
+  if (!toValue) return;
+  mappings[fromValue] = toValue;
+  if (!fromValue.endsWith("!important")) {
+    mappings[`${fromValue} !important`] = toValue;
+  }
 }
 
 function prepareMappings(mappings, opts) {
-  const newMappings = {};
+  const ret = {};
   for (const [key, value] of Object.entries(mappings)) {
     if (key.startsWith("$border: ")) {
       const oldValue = key.substring("$border: ".length);
-      newMappings[`border-color: ${oldValue}`] = `border-color: ${value}`;
-      newMappings[`border: solid ${oldValue}`] = `border-color: ${value}`;
-      newMappings[`border: dashed ${oldValue}`] = `border-color: ${value}`;
-      newMappings[`border-top-color: ${oldValue}`] = `border-top-color: ${value}`;
-      newMappings[`border-bottom-color: ${oldValue}`] = `border-bottom-color: ${value}`;
-      newMappings[`border-left-color: ${oldValue}`] = `border-left-color: ${value}`;
-      newMappings[`border-right-color: ${oldValue}`] = `border-right-color: ${value}`;
+      addMapping(ret, `border-color: ${oldValue}`, `border-color: ${value}`);
+      addMapping(ret, `border: solid ${oldValue}`, `border-color: ${value}`);
+      addMapping(ret, `border: dashed ${oldValue}`, `border-color: ${value}`);
+      addMapping(ret, `border-top-color: ${oldValue}`, `border-top-color: ${value}`);
+      addMapping(ret, `border-bottom-color: ${oldValue}`, `border-bottom-color: ${value}`);
+      addMapping(ret, `border-left-color: ${oldValue}`, `border-left-color: ${value}`);
+      addMapping(ret, `border-right-color: ${oldValue}`, `border-right-color: ${value}`);
       for (let i = 1; i <= opts.limitSpecial; i++) {
-        newMappings[`border: ${i}px solid ${oldValue}`] = `border-color: ${value}`;
-        newMappings[`border: ${i}px dashed ${oldValue}`] = `border-color: ${value}`;
-        newMappings[`border-top: ${i}px solid ${oldValue}`] = `border-top-color: ${value}`;
-        newMappings[`border-top: ${i}px dashed ${oldValue}`] = `border-top-color: ${value}`;
-        newMappings[`border-bottom: ${i}px solid ${oldValue}`] = `border-bottom-color: ${value}`;
-        newMappings[`border-bottom: ${i}px dashed ${oldValue}`] = `border-bottom-color: ${value}`;
-        newMappings[`border-left: ${i}px solid ${oldValue}`] = `border-left-color: ${value}`;
-        newMappings[`border-left: ${i}px dashed ${oldValue}`] = `border-left-color: ${value}`;
-        newMappings[`border-right: ${i}px solid ${oldValue}`] = `border-right-color: ${value}`;
-        newMappings[`border-right: ${i}px dashed ${oldValue}`] = `border-right-color: ${value}`;
+        addMapping(ret, `border: ${i}px solid ${oldValue}`, `border-color: ${value}`);
+        addMapping(ret, `border: ${i}px dashed ${oldValue}`, `border-color: ${value}`);
+        addMapping(ret, `border-top: ${i}px solid ${oldValue}`, `border-top-color: ${value}`);
+        addMapping(ret, `border-top: ${i}px dashed ${oldValue}`, `border-top-color: ${value}`);
+        addMapping(ret, `border-bottom: ${i}px solid ${oldValue}`, `border-bottom-color: ${value}`);
+        addMapping(ret, `border-bottom: ${i}px dashed ${oldValue}`, `border-bottom-color: ${value}`);
+        addMapping(ret, `border-left: ${i}px solid ${oldValue}`, `border-left-color: ${value}`);
+        addMapping(ret, `border-left: ${i}px dashed ${oldValue}`, `border-left-color: ${value}`);
+        addMapping(ret, `border-right: ${i}px solid ${oldValue}`, `border-right-color: ${value}`);
+        addMapping(ret, `border-right: ${i}px dashed ${oldValue}`, `border-right-color: ${value}`);
       }
     } else if (key.startsWith("$background: ")) {
       const oldValue = key.substring("$background: ".length);
-      newMappings[`background: ${oldValue}`] = `background: ${value}`;
-      newMappings[`background: ${oldValue} none`] = `background: ${value}`;
-      newMappings[`background: none ${oldValue}`] = `background: ${value}`;
-      newMappings[`background-color: ${oldValue}`] = `background-color: ${value}`;
-      newMappings[`background-image: ${oldValue}`] = `background-image: ${value}`;
-      newMappings[`background-image: ${oldValue} none`] = `background-image: ${value}`;
-      newMappings[`background-image: none ${oldValue}`] = `background-image: ${value}`;
+      addMapping(ret, `background: ${oldValue}`, `background: ${value}`);
+      addMapping(ret, `background: ${oldValue} none`, `background: ${value}`);
+      addMapping(ret, `background: none ${oldValue}`, `background: ${value}`);
+      addMapping(ret, `background-color: ${oldValue}`, `background-color: ${value}`);
+      addMapping(ret, `background-image: ${oldValue}`, `background-image: ${value}`);
+      addMapping(ret, `background-image: ${oldValue} none`, `background-image: ${value}`);
+      addMapping(ret, `background-image: none ${oldValue}`, `background-image: ${value}`);
     } else {
-      newMappings[key] = value;
+      addMapping(ret, key, value);
     }
   }
-  return newMappings;
+
+  return ret;
 }
 
 // TODO: manually wrap long lines here
@@ -223,46 +238,47 @@ function unmergeableRules(selectors, value, opts) {
 }
 
 function getNewValue(toValue, important) {
-  if (important) {
-    return toValue.trim().replace(/;$/, "").split(";").map(v => `${v} !important`).join(";");
-  } else {
-    return toValue.trim().replace(/;$/, "");
-  }
+  let newValue = toValue.replace(/;$/, "");
+  if (important) newValue = newValue.split(";").map(v => `${v} !important`).join(";");
+  return newValue;
 }
 
-function generateOutput(selectors, fromValue, newValue, opts) {
+function generateOutput(selectors, fromValue, toValue, opts) {
   let output = "";
   if (!selectors || !selectors.length) return output;
+
   const unmergeables = getUnmergeables(selectors);
   if (unmergeables.length) selectors = selectors.filter(selector => !unmergeables.includes(selector));
   if (selectors.length || unmergeables.length) output += (opts.comments ? `/* remap-css rule for "${fromValue}" */\n` : "");
+
+  const newValue =  getNewValue(toValue, fromValue.endsWith("!important"));
   if (selectors.length) output += format(`${selectors.join(",")} {${newValue};}`, opts);
   if (unmergeables.length) output += unmergeableRules(unmergeables, newValue, opts);
+
   return output;
 }
 
-function buildOutput(decls, mappings, opts) {
+function sortByIndex(selectors, indexes) {
+  const sorted = selectors.sort((a, b) => {
+    return indexes[a] - indexes[b];
+  });
+  return sorted;
+}
+
+function buildOutput(decls, mappings, indexData, opts) {
   const sourceOrder = opts.order === "source";
   let output = opts.comments ? "/* begin remap-css rules */\n" : "";
 
   for (let [fromValue, toValue] of Object.entries(sourceOrder ? decls : mappings)) {
     if (sourceOrder) toValue = mappings[fromValue];
-
-    const normalFromValue = fromValue;
-    const importantFromValue = `${fromValue} !important`;
-
-    const normalNewValue = getNewValue(toValue.trim(), false);
-    const importantNewValue = getNewValue(toValue.trim(), true);
-
-    const normalSelectors = Array.from(decls[fromValue] || []).sort();
-    const importantSelectors = Array.from(decls[`${fromValue} !important`] || []).sort();
+    const selectors = Array.from(decls[fromValue] || []).sort();
 
     if (opts.combine) {
-      output += generateOutput(normalSelectors, normalFromValue, normalNewValue, opts);
-      output += generateOutput(importantSelectors, importantFromValue, importantNewValue, opts);
+      output += generateOutput(selectors, fromValue, toValue, opts);
     } else {
-      for (const selector of normalSelectors) output += generateOutput([selector], normalFromValue, normalNewValue, opts);
-      for (const selector of importantSelectors) output += generateOutput([selector], importantFromValue, normalNewValue, opts);
+      for (const selector of sortByIndex(selectors, indexData.indexes)) {
+        output += generateOutput([selector], fromValue, toValue, opts);
+      }
     }
   }
   output += (opts.comments ? "/* end remap-css rules */" : "");
@@ -283,8 +299,9 @@ module.exports = async function remapCss(sources, mappingsArg, opts = {}) {
   }
 
   const decls = {};
+  const indexData = {index: 0, indexes: {}};
   for (const source of sources) {
-    for (const [key, values] of Object.entries(parseSource(source, props, opts))) {
+    for (const [key, values] of Object.entries(parseSource(source, props, indexData, opts))) {
       if (!decls[key]) decls[key] = new Set();
       for (const value of values) {
         decls[key].add(value);
@@ -292,5 +309,5 @@ module.exports = async function remapCss(sources, mappingsArg, opts = {}) {
     }
   }
 
-  return buildOutput(decls, mappings, opts);
+  return buildOutput(decls, mappings, indexData, opts);
 };

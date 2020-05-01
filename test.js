@@ -98,6 +98,29 @@ test("special rule", makeTest({
     }
 `}));
 
+test("important", makeTest({
+  sources: [{css: `
+    a {background: red;}
+    b {background: red !important;}
+    a {background: yellow !important;}
+    b {background: yellow !important;}
+  `}],
+  mappings: {
+    "background: yellow": "background: green",
+    "background: red": "background: blue",
+  },
+  expected: `
+    a, b {
+      background: green !important;
+    }
+    a {
+      background: blue;
+    }
+    b {
+      background: blue !important;
+    }
+`}));
+
 test("mappings order", makeTest({
   sources: [{css: `
     a {background: red;}
@@ -118,7 +141,7 @@ test("mappings order", makeTest({
     }
 `}));
 
-test("source order", makeTest({
+test("source order, combine", makeTest({
   sources: [{css: `
     a {background: red;}
     b {background: red;}
