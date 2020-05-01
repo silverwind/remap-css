@@ -44,6 +44,33 @@ test("basic", makeTest({
     }
 `}));
 
+test("merging same rule", makeTest({
+  sources: [{css: `
+    a,b {color: red;}
+  `}],
+  mappings: {
+    "color: red": "color: blue",
+  },
+  expected: `
+    a, b {
+      color: blue;
+    }
+`}));
+
+test("merging different rules", makeTest({
+  sources: [{css: `
+    a {color: red;}
+    b {color: red;}
+  `}],
+  mappings: {
+    "color: red": "color: blue",
+  },
+  expected: `
+    a, b {
+      color: blue;
+    }
+`}));
+
 test("special rule", makeTest({
   sources: [{css: `
     a {border-left-color: red;}
