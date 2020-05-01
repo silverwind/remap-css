@@ -11,15 +11,22 @@ function unintend(str) {
   return str;
 }
 
-const makeTest = ({sources, mappings, opts, expected}) => {
+const makeTest = ({sources, mappings, opts, expected, expectedExact}) => {
   return async () => {
     const output = await remapCss(sources, mappings, opts);
-    return expect(unintend(output)).toEqual(unintend(expected));
+    if (expected) expect(unintend(output)).toEqual(unintend(expected));
+    if (expectedExact) expect(output).toEqual(expectedExact);
   };
 };
 
 test("no input", makeTest({
   sources: [],
+  mappings: {},
+  expected: "",
+}));
+
+test("no mappings", makeTest({
+  sources: [{css: "a {color: red}"}],
   mappings: {},
   expected: "",
 }));
@@ -122,3 +129,14 @@ test("source order, no combine", makeTest({
       background: green;
     }
 `}));
+
+test("indentSize 0", makeTest({
+  sources: [{css: `a {color: red;}`}],
+  mappings: {
+    "color: red": "color: blue",
+  },
+  opts: {
+    indentSize: 0,
+  },
+  expectedExact: "a {\n  color: blue;\n}\n",
+}));
