@@ -1,9 +1,10 @@
 "use strict";
 
-const css = require("css");
-const cssMediaQuery = require("css-mediaquery");
 const cssColorNames = require("css-color-names");
+const cssMediaQuery = require("css-mediaquery");
 const perfectionist = require("perfectionist");
+const postcssSafeParser = require("postcss-safe-parser");
+const splitCssSelector = require("split-css-selector");
 const {isShorthand} = require("css-shorthand-properties");
 
 const defaults = {
@@ -29,39 +30,41 @@ function mediaMatches(query, opts) {
   }
 }
 
-function parseDeclarations(source, props, opts) {
+function getRuleNodes(nodes, opts) {
+  const ret = [];
+  for (const node of nodes) {
+    if (node.type === "atrule" && node.name === "media" && mediaMatches(node.params, opts) && node.nodes && node.nodes.length) {
+      ret.push(...getRuleNodes(node.nodes || [], opts));
+    } else if (node.type === "rule") {
+      ret.push(node);
+    }
+  }
+  return ret;
+}
+
+function parseSource(source, props, opts) {
   const decls = {};
-  const stylesheet = css.parse(source.css).stylesheet;
+  const parsed = postcssSafeParser(source.css);
+  const nodes = getRuleNodes(parsed.nodes, opts);
 
-  stylesheet.rules.forEach(rule => {
-    if (rule.type === "media" && mediaMatches(rule.media, opts)) {
-      rule.rules.forEach(rule => parseRule(decls, rule, props, source, opts));
-    }
-
-    const selectors = (rule.selectors || []).filter(v => !!v);
-    if (selectors && selectors.length) {
-      parseRule(decls, rule, props, source, opts);
-    }
-  });
+  for (const node of nodes) {
+    parseRule(node, decls, props, source, opts);
+  }
 
   return decls;
 }
 
-function parseRule(decls, rule, props, source, opts) {
-  for (const {value, property} of rule.declarations || []) {
-    if (!props[property] || !value) continue;
-    const normalizedValue = normalize(value, property);
-    if (!props[property][normalizedValue]) continue;
-    const originalValue = props[property][normalizedValue];
-
-    let name = `${property}: ${originalValue}`;
-    if (value.trim().endsWith("!important")) {
-      name = `${name} !important`;
-    }
+function parseRule(rule, decls, props, source, opts) {
+  for (const {prop, value, important} of rule.nodes.filter(node => node.type === "decl") || []) {
+    if (!props[prop] || !value) continue;
+    const normalizedValue = normalize(value, prop);
+    if (!props[prop][normalizedValue]) continue;
+    const originalValue = props[prop][normalizedValue];
+    const name = `${prop}: ${originalValue}${important ? " !important" : ""}`;
 
     if (!decls[name]) decls[name] = new Set();
 
-    for (let selector of rule.selectors) {
+    for (let selector of splitCssSelector(rule.selector)) {
       // Skip ignored selectors
       if (opts.ignoreSelectors.some(re => re.test(selector))) continue;
 
@@ -281,7 +284,7 @@ module.exports = async function remapCss(sources, mappingsArg, opts = {}) {
 
   const decls = {};
   for (const source of sources) {
-    for (const [key, values] of Object.entries(parseDeclarations(source, props, opts))) {
+    for (const [key, values] of Object.entries(parseSource(source, props, opts))) {
       if (!decls[key]) decls[key] = new Set();
       for (const value of values) {
         decls[key].add(value);

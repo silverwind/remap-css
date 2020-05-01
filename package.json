@@ -22,11 +22,12 @@
     "index.js"
   ],
   "dependencies": {
-    "css": "2.2.4",
     "css-color-names": "1.0.1",
     "css-mediaquery": "0.1.2",
     "css-shorthand-properties": "1.1.1",
-    "perfectionist": "2.4.0"
+    "perfectionist": "2.4.0",
+    "postcss-safe-parser": "4.0.2",
+    "split-css-selector": "1.0.0"
   },
   "devDependencies": {
     "eslint": "6.8.0",
