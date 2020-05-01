@@ -71,6 +71,20 @@ test("merging different rules", makeTest({
     }
 `}));
 
+test("merging different duplicate rules and sort selectors", makeTest({
+  sources: [{css: `
+    b {color: red;}
+    a, b {color: red;}
+  `}],
+  mappings: {
+    "color: red": "color: blue",
+  },
+  expected: `
+    a, b {
+      color: blue;
+    }
+`}));
+
 test("special rule", makeTest({
   sources: [{css: `
     a {border-left-color: red;}
