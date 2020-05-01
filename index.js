@@ -264,7 +264,7 @@ function buildOutput(decls, mappings, opts) {
   }
   output += (opts.comments ? "/* end remap-css rules */" : "");
   const indent = " ".repeat(opts.indentCss);
-  return output.split("\n").map(line => `${indent}${line}`).join("\n");
+  return output.split("\n").filter(l => !!l).map(line => `${indent}${line}`).join("\n");
 }
 
 module.exports = async function remapCss(sources, mappingsArg, opts = {}) {

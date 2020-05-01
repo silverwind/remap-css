@@ -7,7 +7,7 @@ function unintend(str) {
   str = str.replace(/^\n/, "").replace(/\n +$/g, "\n");
   const indent = (/^ +/.exec(str.split(/\n/)[0]) || [[]])[0].length;
   const re = new RegExp(`^ {${indent}}`);
-  str = str.split(/\n/).map(line => line.replace(re, "")).join(/\n/);
+  str = str.split(/\n/).filter(l => !!l).map(line => line.replace(re, "")).join(/\n/);
   return str;
 }
 
@@ -138,5 +138,17 @@ test("indentSize 0", makeTest({
   opts: {
     indentSize: 0,
   },
-  expectedExact: "a {\n  color: blue;\n}\n",
+  expectedExact: `a {\n  color: blue;\n}`,
+}));
+
+test("indentSize 0, comments: true", makeTest({
+  sources: [{css: `a {color: red;}`}],
+  mappings: {
+    "color: red": "color: blue",
+  },
+  opts: {
+    indentSize: 0,
+    comments: true,
+  },
+  expectedExact: `/* begin remap-css rules */\n/* remap-css rule for "color: red" */\na {\n  color: blue;\n}\n/* end remap-css rules */`,
 }));
