@@ -26,8 +26,10 @@
     "css-mediaquery": "0.1.2",
     "css-shorthand-properties": "1.1.1",
     "perfectionist": "2.4.0",
+    "postcss": "7.0.27",
     "postcss-safe-parser": "4.0.2",
-    "split-css-selector": "1.0.0"
+    "prettier": "2.0.5",
+    "split-string": "6.1.0"
   },
   "devDependencies": {
     "eslint": "6.8.0",

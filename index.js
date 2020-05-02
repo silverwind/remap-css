@@ -1,115 +1,69 @@
 "use strict";
 
 const cssColorNames = require("css-color-names");
-const cssMediaQuery = require("css-mediaquery");
-const perfectionist = require("perfectionist");
+const postcss = require("postcss");
 const postcssSafeParser = require("postcss-safe-parser");
-const splitCssSelector = require("split-css-selector");
+const prettier = require("prettier");
+const splitString = require("split-string");
 const {isShorthand} = require("css-shorthand-properties");
+const pkg = require("./package.json");
 
 const defaults = {
-  indentDeclaration: 2,
+  indentSize: 2,
   indentCss: 0,
   lineLength: 80,
   ignoreSelectors: [],
   limitSpecial: 25,
-  deviceType: "screen",
-  deviceWidth: "1024px",
   comments: false,
   stylistic: false,
-  order: "mappings",
-  combine: true,
 };
 
-function mediaMatches(query, opts) {
-  const {deviceType: type, deviceWidth: width} = opts;
-  try {
-    return cssMediaQuery.match(query, {type, width});
-  } catch {
-    return true; // this library has a few bugs. In case of error, we include the rule.
-  }
-}
+const splitDecls = str => splitString(str, {separator: ";", quotes: [`"`, `'`]});
+const splitSelectors = str => splitString(str, {separator: ",", quotes: [`"`, `'`]});
+const joinSelectors = selectors => selectors.join(", ");
 
-function getRuleNodes(nodes, opts) {
+function rewriteSelectors(selectors, opts) {
   const ret = [];
-  for (const node of nodes) {
-    if (node.type === "atrule" && node.name === "media" && mediaMatches(node.params, opts) && node.nodes && node.nodes.length) {
-      ret.push(...getRuleNodes(node.nodes || [], opts));
-    } else if (node.type === "rule") {
-      ret.push(node);
+
+  for (let selector of selectors) {
+    if (opts.stylistic) {
+      selector = selector
+        .replace(/\+/g, " + ")
+        .replace(/(~)([^=])/g, (_, m1, m2) => ` ${m1} ${m2}`)
+        .replace(/>/g, " > ")
+        .replace(/ {2,}/g, " ")
+        .replace(/'/g, `"`)
+        .replace(/([^:]):(before|after)/g, (_, m1, m2) => `${m1}::${m2}`);
     }
+
+    // add prefix
+    if (opts.prefix) {
+      // skip adding a prefix if it matches a selector in `match`
+      let skip = false;
+      if (opts.match) {
+        for (const match of opts.match) {
+          const first = selector.split(/\s+/)[0];
+          if ((/^[.#]+/.test(first) && first === match) || first.startsWith(match)) {
+            skip = true;
+            break;
+          }
+        }
+      }
+
+      if (!skip) {
+        // incomplete check to avoid generating invalid "html :root" selectors
+        if (selector.startsWith(":root ") && opts.prefix.startsWith("html")) {
+          selector = `${opts.prefix} ${selector.substring(":root ".length)}`;
+        } else {
+          selector = `${opts.prefix} ${selector}`;
+        }
+      }
+    }
+
+    ret.push(selector);
   }
+
   return ret;
-}
-
-function parseSource(source, props, indexData, opts) {
-  const decls = {};
-  const parsed = postcssSafeParser(source.css);
-  const nodes = getRuleNodes(parsed.nodes, opts);
-
-  for (const node of nodes) {
-    parseRule(node, decls, props, indexData, source, opts);
-  }
-
-  return decls;
-}
-
-function parseRule(rule, decls, props, indexData, source, opts) {
-  for (const {prop, value, important} of rule.nodes.filter(node => node.type === "decl") || []) {
-    if (!props[prop] || !value) continue;
-    const normalizedValue = normalize(value, prop);
-    if (!props[prop][normalizedValue]) continue;
-    const originalValue = props[prop][normalizedValue];
-    const name = `${prop}: ${originalValue}${important ? " !important" : ""}`;
-
-    if (!decls[name]) decls[name] = new Set();
-
-    for (let selector of splitCssSelector(rule.selector)) {
-      // Skip ignored selectors
-      if (opts.ignoreSelectors.some(re => re.test(selector))) continue;
-
-      indexData.indexes[selector] = indexData.index;
-      indexData.index += 1;
-
-      // stylistic tweaks
-      if (opts.stylistic) {
-        selector = selector
-          .replace(/\+/g, " + ")
-          .replace(/(~)([^=])/g, (_, m1, m2) => ` ${m1} ${m2}`)
-          .replace(/>/g, " > ")
-          .replace(/ {2,}/g, " ")
-          .replace(/'/g, `"`)
-          .replace(/([^:]):(before|after)/g, (_, m1, m2) => `${m1}::${m2}`); // css parser seems to emit "::" as ":"
-      }
-
-      // add prefix
-      if (source.prefix) {
-        // skip adding a prefix if it matches a selector in `match`
-        let skip = false;
-        if (source.match) {
-          for (const match of source.match) {
-            const first = selector.split(/\s+/)[0];
-            if ((/^[.#]+/.test(first) && first === match) || first.startsWith(match)) {
-              skip = true;
-              break;
-            }
-          }
-        }
-
-        if (!skip) {
-          // incomplete check to avoid generating invalid "html :root" selectors
-          if (selector.startsWith(":root ") && source.prefix.startsWith("html")) {
-            selector = `${source.prefix} ${selector.substring(":root ".length)}`;
-          } else {
-            selector = `${source.prefix} ${selector}`;
-          }
-        }
-      }
-
-      // add the selector to the selector list for this mapping
-      decls[name].add(selector);
-    }
-  }
 }
 
 function normalizeHexColor(value) {
@@ -122,12 +76,12 @@ function normalizeHexColor(value) {
   return value;
 }
 
-function normalize(value, prop) {
-  const isImportant = value.trim().endsWith("!important");
+function normalizeDecl({prop, value, important}) {
+  prop = prop.toLowerCase();
+
+  const origValue = value;
 
   value = value
-    // remove important
-    .replace(/!important$/g, "").trim()
     // remove leading zeroes on values like 'rgba(27,31,35,0.075)'
     .replace(/0(\.[0-9])/g, (_, val) => val)
     // normalize 'linear-gradient(-180deg, #0679fc, #0361cc 90%)' to not have whitespace in parens
@@ -152,15 +106,44 @@ function normalize(value, prop) {
     value = value.split(" ").sort().join(" ");
   }
 
-  return `${value}${isImportant ? " !important" : ""}`;
+  return {prop, value, important, origValue};
 }
 
-function addMapping(mappings, fromValue, toValue) {
-  toValue = toValue.trim();
-  if (!toValue) return;
-  mappings[fromValue] = toValue;
-  if (!fromValue.endsWith("!important")) {
-    mappings[`${fromValue} !important`] = toValue;
+// returns an array of declarations
+function parseDecl(declString) {
+  declString = declString.trim().replace(/;+$/, "").trim();
+
+  const ret = [];
+  for (const str of splitDecls(declString)) {
+    const parts = str.split(":");
+    const important = parts[parts.length - 1].toLowerCase() === "!important";
+    if (important) parts.pop();
+    const prop = parts.shift().trim();
+    const value = parts.join().trim();
+    ret.push(normalizeDecl({prop, value, important}));
+  }
+  return ret;
+}
+
+function stringifyDecl(decl) {
+  const {prop, value, important} = normalizeDecl(decl);
+  return `${prop}: ${value}${important ? " !important" : ""}`;
+}
+
+function normalizeDeclString(declString) {
+  return stringifyDecl(parseDecl(declString)[0]);
+}
+
+function addMapping(mappings, fromStringDecl, toStringDecl) {
+  const fromDecl = parseDecl(fromStringDecl)[0]; // can only be single declaration
+  const toDecl = parseDecl(toStringDecl);
+  if (!toStringDecl) return;
+
+  if (fromDecl.important) {
+    mappings[stringifyDecl(fromDecl)] = toDecl;
+  } else {
+    mappings[stringifyDecl(fromDecl)] = toDecl;
+    mappings[stringifyDecl({prop: fromDecl.prop, value: fromDecl.value, important: true})] = toDecl;
   }
 }
 
@@ -205,109 +188,127 @@ function prepareMappings(mappings, opts) {
   return ret;
 }
 
-// TODO: manually wrap long lines here
-function format(css, opts) {
-  const {indentDeclaration: indentSize, lineLength: maxSelectorLength} = opts;
-  return String(perfectionist.process(css, {indentSize, maxSelectorLength}));
-}
-
-function getUnmergeables(selectors) {
-  return selectors.filter(selector => /-(moz|ms|webkit)-.+/.test(selector));
-}
-
-function unmergeableRules(selectors, value, opts) {
-  let ret = "";
-  const moz = [];
-  const webkit = [];
-  const ms = [];
-  const other = [];
-
-  for (const selector of selectors) {
-    if (selector.includes("-moz-")) moz.push(selector);
-    else if (selector.includes("-webkit-")) webkit.push(selector);
-    else if (selector.includes("-ms-")) ms.push(selector);
-    else other.push(selector);
+function hasDeclarations(root) {
+  if (root.type === "decl") return true;
+  if (!root.nodes || !root.nodes.length) return false;
+  for (const node of root.nodes || []) {
+    if (hasDeclarations(node)) return true;
   }
 
-  if (moz.length) ret += format(`${moz.join(", ")} {${value};}`, opts);
-  if (webkit.length) ret += format(`${webkit.join(", ")} {${value};}`, opts);
-  if (ms.length) ret += format(`${ms.join(", ")} {${value};}`, opts);
-  if (other.length) ret += format(`${other.join(", ")} {${value};}`, opts);
-
-  return ret;
+  return false;
 }
 
-function getNewValue(toValue, important) {
-  let newValue = toValue.replace(/;$/, "");
-  if (important) newValue = newValue.split(";").map(v => `${v} !important`).join(";");
-  return newValue;
+// this may add extra newlines, but those are trimmed off later
+function makeComment(text) {
+  return postcss.comment({
+    raws: {before: "\n", after: "\n", left: " ", right: " "},
+    text,
+  });
 }
 
-function generateOutput(selectors, fromValue, toValue, opts) {
+const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
+  return async (root, _result) => {
+    const mappingsNormalizationMap = {};
+
+    // map normalized declarations back to entered ones for comment creation
+    if (opts.comments) {
+      for (const declString of Object.keys(mappings)) {
+        mappingsNormalizationMap[normalizeDeclString(declString)] = declString;
+      }
+    }
+
+    const preparedMappings = prepareMappings(mappings, opts);
+
+    root.walkRules(rule => {
+      const matchedDeclStrings = [];
+
+      rule.walkDecls((decl) => {
+        const declString = stringifyDecl({prop: decl.prop, value: decl.value, important: decl.important});
+        const newDecls = [];
+        if (preparedMappings[declString]) {
+          matchedDeclStrings.push(`"${mappingsNormalizationMap[declString]}"`);
+          for (const newDecl of preparedMappings[declString] || []) {
+            const {value, important, origValue} = newDecl;
+            newDecls.push(decl.clone({value: origValue || value, important: Boolean(decl.important || important)}));
+          }
+          decl.replaceWith(...newDecls);
+        } else {
+          decl.remove();
+        }
+      });
+
+      if (matchedDeclStrings.length) {
+        const newSelectors = rewriteSelectors(splitSelectors(rule.selector), opts).filter(selector => {
+          for (const re of opts.ignoreSelectors) {
+            if (re.test(selector)) return false;
+          }
+          return true;
+        });
+
+        if (newSelectors.length) {
+          if (opts.comments) {
+            root.insertBefore(rule, makeComment(`${pkg.name} rule for ${matchedDeclStrings.join(", ")}`));
+          }
+          rule.selector = joinSelectors(newSelectors);
+        } else {
+          rule.remove();
+        }
+      }
+    });
+
+    root.walk(node => {
+      if (node.type === "decl") return;
+      if (node.type === "comment") {
+        if (node.text.startsWith(`${pkg.name} rule for`)) return;
+        node.remove();
+      }
+      if (!hasDeclarations(node)) node.remove();
+    });
+
+    if (opts.comments) root.prepend(makeComment(`begin ${pkg.name} rules`));
+    if (opts.comments) root.append(makeComment(`end ${pkg.name} rules`));
+  };
+});
+
+module.exports = async function remapCss(sources, mappings, opts = {}) {
+  opts = Object.assign({}, defaults, opts);
+
   let output = "";
-  if (!selectors || !selectors.length) return output;
+  for (const {css, prefix, match} of sources) {
+    const result = await postcss([plugin(mappings, {...opts, prefix, match})]).process(css, {parser: postcssSafeParser, from: undefined});
+    output += result.css;
+  }
 
-  const unmergeables = getUnmergeables(selectors);
-  if (unmergeables.length) selectors = selectors.filter(selector => !unmergeables.includes(selector));
-  if (selectors.length || unmergeables.length) output += (opts.comments ? `/* remap-css rule for "${fromValue}" */\n` : "");
+  output = prettier.format(output, {
+    parser: "css",
+    tabWidth: opts.indentSize,
+    printWidth: opts.lineLength - opts.indentCss,
+    useTabs: false,
+    singleQuote: false,
+  });
 
-  const newValue =  getNewValue(toValue, fromValue.endsWith("!important"));
-  if (selectors.length) output += format(`${selectors.join(",")} {${newValue};}`, opts);
-  if (unmergeables.length) output += unmergeableRules(unmergeables, newValue, opts);
+  // remove empty lines
+  output = output.replace(/\n{2,}/g, "\n").trim();
+
+  // put selectors on the same line
+  output = output.replace(/,\n( *)/g, (_, m1) => `,${m1.trim()} `);
+
+  // wrap selector lists at lineLength
+  output = output.replace(/^( *)(.+?) {/gm, (_, whitespace, content) => {
+    let newContent = "";
+    for (const part of content.split(", ").filter(p => !!p)) {
+      const currentLength = /.*$/.exec(newContent)[0].length;
+      const requiredLength = opts.lineLength - part.length - whitespace.length;
+      if (requiredLength < currentLength) newContent += `\n${whitespace}`;
+      newContent += `${part}, `;
+    }
+    return `${whitespace}${newContent.replace(/, $/, "")} {`;
+  });
+
+  // indent everything
+  if (opts.indentCss && opts.indentCss > 0) {
+    output = output.replace(/^(.*)/gm, (_, m1) => `${" ".repeat(opts.indentCss)}${m1}`);
+  }
 
   return output;
-}
-
-function sortByIndex(selectors, indexes) {
-  const sorted = selectors.sort((a, b) => {
-    return indexes[a] - indexes[b];
-  });
-  return sorted;
-}
-
-function buildOutput(decls, mappings, indexData, opts) {
-  const sourceOrder = opts.order === "source";
-  let output = opts.comments ? "/* begin remap-css rules */\n" : "";
-
-  for (let [fromValue, toValue] of Object.entries(sourceOrder ? decls : mappings)) {
-    if (sourceOrder) toValue = mappings[fromValue];
-    const selectors = Array.from(decls[fromValue] || []).sort();
-
-    if (opts.combine) {
-      output += generateOutput(selectors, fromValue, toValue, opts);
-    } else {
-      for (const selector of sortByIndex(selectors, indexData.indexes)) {
-        output += generateOutput([selector], fromValue, toValue, opts);
-      }
-    }
-  }
-  output += (opts.comments ? "/* end remap-css rules */" : "");
-  const indent = " ".repeat(opts.indentCss);
-  return output.split("\n").filter(l => !!l).map(line => `${indent}${line}`).join("\n");
-}
-
-module.exports = async function remapCss(sources, mappingsArg, opts = {}) {
-  opts = Object.assign({}, defaults, opts);
-  const mappings = prepareMappings(mappingsArg, opts);
-
-  const props = {};
-  for (const mapping of Object.keys(mappings)) {
-    const [prop, val] = mapping.split(": ");
-    const normalizedVal = normalize(val, prop);
-    if (!props[prop]) props[prop] = {};
-    props[prop][normalizedVal] = val;
-  }
-
-  const decls = {};
-  const indexData = {index: 0, indexes: {}};
-  for (const source of sources) {
-    for (const [key, values] of Object.entries(parseSource(source, props, indexData, opts))) {
-      if (!decls[key]) decls[key] = new Set();
-      for (const value of values) {
-        decls[key].add(value);
-      }
-    }
-  }
-
-  return buildOutput(decls, mappings, indexData, opts);
 };

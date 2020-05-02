@@ -7,7 +7,7 @@ function unintend(str) {
   str = str.replace(/^\n/, "").replace(/\n +$/g, "\n");
   const indent = (/^ +/.exec(str.split(/\n/)[0]) || [[]])[0].length;
   const re = new RegExp(`^ {${indent}}`);
-  str = str.split(/\n/).filter(l => !!l).map(line => line.replace(re, "")).join(/\n/);
+  str = str.split(/\n/).filter(l => !!l).map(line => line.replace(re, "")).join("\n");
   return str;
 }
 
@@ -44,7 +44,7 @@ test("basic", makeTest({
     }
 `}));
 
-test("merging same rule", makeTest({
+test("multiple selectors", makeTest({
   sources: [{css: `
     a,b {color: red;}
   `}],
@@ -57,7 +57,7 @@ test("merging same rule", makeTest({
     }
 `}));
 
-test("merging different rules", makeTest({
+test("single selectors", makeTest({
   sources: [{css: `
     a {color: red;}
     b {color: red;}
@@ -66,12 +66,15 @@ test("merging different rules", makeTest({
     "color: red": "color: blue",
   },
   expected: `
-    a, b {
+    a {
+      color: blue;
+    }
+    b {
       color: blue;
     }
 `}));
 
-test("merging different duplicate rules and sort selectors", makeTest({
+test("duplicate rules", makeTest({
   sources: [{css: `
     b {color: red;}
     a, b {color: red;}
@@ -80,6 +83,9 @@ test("merging different duplicate rules and sort selectors", makeTest({
     "color: red": "color: blue",
   },
   expected: `
+    b {
+      color: blue;
+    }
     a, b {
       color: blue;
     }
@@ -110,61 +116,21 @@ test("important", makeTest({
     "background: red": "background: blue",
   },
   expected: `
-    a, b {
-      background: green !important;
-    }
     a {
       background: blue;
     }
     b {
       background: blue !important;
     }
-`}));
-
-test("mappings order", makeTest({
-  sources: [{css: `
-    a {background: red;}
-    b {background: red;}
-    a {background: yellow;}
-    b {background: yellow;}
-  `}],
-  mappings: {
-    "background: yellow": "background: green",
-    "background: red": "background: blue",
-  },
-  expected: `
-    a, b {
-      background: green;
+    a {
+      background: green !important;
     }
-    a, b {
-      background: blue;
+    b {
+      background: green !important;
     }
 `}));
 
-test("source order, combine", makeTest({
-  sources: [{css: `
-    a {background: red;}
-    b {background: red;}
-    a {background: yellow;}
-    b {background: yellow;}
-  `}],
-  mappings: {
-    "background: yellow": "background: green",
-    "background: red": "background: blue",
-  },
-  opts: {
-    order: "source",
-  },
-  expected: `
-    a, b {
-      background: blue;
-    }
-    a, b {
-      background: green;
-    }
-`}));
-
-test("source order, no combine", makeTest({
+test("order", makeTest({
   sources: [{css: `
     a {background: red;}
     b {background: yellow;}
@@ -175,15 +141,8 @@ test("source order, no combine", makeTest({
     "background: yellow": "background: green",
     "background: red": "background: blue",
   },
-  opts: {
-    order: "source",
-    combine: false,
-  },
   expected: `
     a {
-      background: blue;
-    }
-    d {
       background: blue;
     }
     b {
@@ -191,6 +150,9 @@ test("source order, no combine", makeTest({
     }
     c {
       background: green;
+    }
+    d {
+      background: blue;
     }
 `}));
 
@@ -202,7 +164,7 @@ test("indentSize 0", makeTest({
   opts: {
     indentSize: 0,
   },
-  expectedExact: `a {\n  color: blue;\n}`,
+  expectedExact: `a {\ncolor: blue;\n}`,
 }));
 
 test("indentSize 0, comments: true", makeTest({
@@ -214,5 +176,5 @@ test("indentSize 0, comments: true", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* begin remap-css rules */\n/* remap-css rule for "color: red" */\na {\n  color: blue;\n}\n/* end remap-css rules */`,
+  expectedExact: `/* begin remap-css rules */\n/* remap-css rule for "color: red" */\na {\ncolor: blue;\n}\n/* end remap-css rules */`,
 }));

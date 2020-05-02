@@ -28,17 +28,13 @@ Returns a `Promise` that resolves to a CSS string.
     - `match`: *string* A array of plain CSS selectors that prevent a prefix addition on exact match
 - `mappings`: *Object* CSS declaration value-to-value mapping. The key is either a exact match CSS declaration or a special rule starting with `$`. The value is the corresponding replacement declaration or a color in the case of a special rule.
 - `options`: *Object*
-  - `indentDeclaration`: *number* Numbers of spaces to indent declarations. Default: `2`.
+  - `indentSize`: *number* Numbers of spaces to indent rules and declarations. Default: `2`.
   - `indentCss`: *number* Numbers of spaces to indent the output CSS. Default: `0`.
   - `lineLength`: *number* Number of characters after which to wrap lines. Default: `80`.
   - `ignoreSelectors`: *Array* of *RegExp* Regular expressions of selectors to ignore. Default: `[]`.
   - `limitSpecial`: *number* Maximum amount of iteration per special mappings. Default: `25`.
-  - `deviceType`: *string* CSS media query device type to match. Default: `"screen"`.
-  - `deviceWidth`: "string" CSS media query device width to match. Default: `"1024px"`.
   - `comments`: *boolean* Whether to output comments. Default: `false`.
   - `stylistic`: *boolean* Whether to perform stylistic tweaks on selectors. Default: `false`.
-  - `order`: *string* Ordering of the output CSS rules. Either `mappings` or `source`. Default: `"mappings"`.
-  - `combine`: *boolean* Whether to combine CSS rules with the same declarations. Default: `true`.
 
 There are special mapping keys supported to reduce the need for similar `border` and `background` rules:
 
