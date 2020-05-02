@@ -190,3 +190,22 @@ test("special mapping name", makeTest({
   },
   expectedExact: `/* remap-css rule for "background: red" */\na {\nbackground: blue;\n}`,
 }));
+
+test("ignore atrules", makeTest({
+  sources: [{css: `
+    a {
+      background: red;
+    }
+    @font-face {
+      font-family: 'font';
+    }
+  `}],
+  mappings: {
+    "$background: red": "blue",
+  },
+  opts: {
+    indentSize: 0,
+    comments: true,
+  },
+  expectedExact: `/* remap-css rule for "background: red" */\na {\nbackground: blue;\n}`,
+}));

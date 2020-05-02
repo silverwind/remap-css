@@ -205,14 +205,15 @@ function makeComment(text) {
 }
 
 const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
-  return async (root, _result) => {
+  return async root => {
     const names = {};
     const preparedMappings = prepareMappings(mappings, names, opts);
 
-    root.walkRules(rule => {
+    root.walk(node => {
+      if (!["rule", "atrule"].includes(node.type)) return;
       const matchedDeclStrings = [];
 
-      rule.walkDecls((decl) => {
+      node.walkDecls((decl) => {
         const declString = stringifyDecl({prop: decl.prop, value: decl.value, important: decl.important});
         const newDecls = [];
         if (preparedMappings[declString]) {
@@ -228,7 +229,7 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
       });
 
       if (matchedDeclStrings.length) {
-        const newSelectors = rewriteSelectors(splitSelectors(rule.selector), opts).filter(selector => {
+        const newSelectors = rewriteSelectors(splitSelectors(node.selector), opts).filter(selector => {
           for (const re of opts.ignoreSelectors) {
             if (re.test(selector)) return false;
           }
@@ -237,11 +238,11 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
 
         if (newSelectors.length) {
           if (opts.comments) {
-            root.insertBefore(rule, makeComment(`${pkg.name} rule for ${matchedDeclStrings.join(", ")}`));
+            root.insertBefore(node, makeComment(`${pkg.name} rule for ${matchedDeclStrings.join(", ")}`));
           }
-          rule.selector = joinSelectors(newSelectors);
+          node.selector = joinSelectors(newSelectors);
         } else {
-          rule.remove();
+          node.remove();
         }
       }
     });
