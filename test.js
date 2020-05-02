@@ -176,7 +176,7 @@ test("indentSize 0, comments: true", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* begin remap-css rules */\n/* remap-css rule for "color: red" */\na {\ncolor: blue;\n}\n/* end remap-css rules */`,
+  expectedExact: `/* remap-css rule for "color: red" */\na {\ncolor: blue;\n}`,
 }));
 
 test("special mapping name", makeTest({
@@ -188,5 +188,5 @@ test("special mapping name", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* begin remap-css rules */\n/* remap-css rule for "background: red" */\na {\nbackground: blue;\n}\n/* end remap-css rules */`,
+  expectedExact: `/* remap-css rule for "background: red" */\na {\nbackground: blue;\n}`,
 }));

@@ -254,9 +254,6 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
       }
       if (!hasDeclarations(node)) node.remove();
     });
-
-    if (opts.comments) root.prepend(makeComment(`begin ${pkg.name} rules`));
-    if (opts.comments) root.append(makeComment(`end ${pkg.name} rules`));
   };
 });
 
