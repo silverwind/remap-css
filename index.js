@@ -317,13 +317,19 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   // wrap selector lists at lineLength
   output = output.replace(/^( *)(.+?) {/gm, (_, whitespace, content) => {
     let newContent = "";
-    for (const part of content.split(", ").filter(p => !!p)) {
+    const parts = content.split(", ").filter(p => !!p);
+    const lastIndex = parts.length - 1;
+    for (let [index, part] of Object.entries(parts)) {
+      index = Number(index);
       const currentLength = /.*$/.exec(newContent)[0].length;
       const requiredLength = opts.lineLength - part.length - whitespace.length;
-      if (requiredLength < currentLength) newContent += `\n${whitespace}`;
-      newContent += `${part}, `;
+      if (requiredLength < currentLength) {
+        newContent = newContent.replace(/ $/g, "");
+        newContent += `\n${whitespace}`;
+      }
+      newContent += `${part.trim()}${index !== lastIndex ? ", " : ""}`;
     }
-    return `${whitespace}${newContent.replace(/, $/, "")} {`;
+    return `${whitespace}${newContent.trim()} {`;
   });
 
   // add space before declaration leading comments
