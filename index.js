@@ -205,11 +205,8 @@ function makeComment(text) {
   });
 }
 
-const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
+const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
   return async root => {
-    const names = {};
-    const preparedMappings = prepareMappings(mappings, names, opts);
-
     root.walkRules(node => {
       const matchedDeclStrings = [];
 
@@ -292,9 +289,12 @@ function prettierFormat(css, opts) {
 module.exports = async function remapCss(sources, mappings, opts = {}) {
   opts = Object.assign({}, defaults, opts);
 
+  const names = {};
+  const preparedMappings = prepareMappings(mappings, names, opts);
+
   let output = "";
   for (const {css, prefix, match} of sources) {
-    const result = await postcss([plugin(mappings, {...opts, prefix, match})]).process(css, {parser: postcssSafeParser, from: undefined});
+    const result = await postcss([plugin(preparedMappings, names, {...opts, prefix, match})]).process(css, {parser: postcssSafeParser, from: undefined});
     output += result.css;
   }
 
