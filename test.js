@@ -288,3 +288,18 @@ test("keyframe atrule, no prefix", makeTest({
       }
     }
 `}));
+
+test("prop replacement", makeTest({
+  sources: [{css: `
+    a {
+      background: red;
+    }
+  `}],
+  mappings: {
+    "background: red": "background-color: blue",
+  },
+  expected: `
+    a {
+      background-color: blue;
+    }
+`}));

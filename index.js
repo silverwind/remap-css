@@ -218,8 +218,9 @@ const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
         if (preparedMappings[declString]) {
           matchedDeclStrings.push(`"${names[declString]}"`);
           for (const newDecl of preparedMappings[declString] || []) {
-            const {value, important, origValue} = newDecl;
+            const {prop, value, important, origValue} = newDecl;
             newDecls.push(decl.clone({
+              prop,
               value: origValue || value,
               important: Boolean(decl.important || important),
               raws: {
