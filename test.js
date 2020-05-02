@@ -266,3 +266,25 @@ test("atrules comments", makeTest({
   },
   expectedExact: `/* remap-css rule for "background: red", "background: green" */\n@media screen {\n  a {\n    background: blue;\n  }\n  b {\n    background: yellow;\n  }\n}`,
 }));
+
+test("keyframe atrule, no prefix", makeTest({
+  sources: [{css: `
+    @keyframes blink {
+      50% {
+        background: none;
+      }
+    }
+  `}],
+  mappings: {
+    "$background: none": "blue",
+  },
+  opts: {
+    prefix: "prefix",
+  },
+  expected: `
+    @keyframes blink {
+      50% {
+        background: blue;
+      }
+    }
+`}));

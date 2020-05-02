@@ -18,6 +18,8 @@ const defaults = {
   stylistic: false,
 };
 
+const atRulesWithNoSelectors = new Set(["keyframes"]);
+
 const splitDecls = str => splitString(str, {separator: ";", quotes: [`"`, `'`]});
 const splitSelectors = str => splitString(str, {separator: ",", quotes: [`"`, `'`]});
 const joinSelectors = selectors => selectors.join(", ");
@@ -250,7 +252,10 @@ const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
               root.insertBefore(targetNode, makeComment(`${pkg.name} rule for ${matchedDeclStrings.join(", ")}`));
             }
           }
-          node.selector = joinSelectors(newSelectors);
+
+          if (node.selector && !(node.parent && node.parent.type === "atrule" && atRulesWithNoSelectors.has(node.parent.name))) {
+            node.selector = joinSelectors(newSelectors);
+          }
         } else {
           node.remove();
         }
@@ -306,9 +311,6 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   // move comments to their own line
   output = output.replace(/} \/\*/g, "}\n/*");
 
-  // remove empty lines
-  output = output.replace(/\n{2,}/g, "\n").trim();
-
   // put selectors on the same line
   output = output.replace(/,\n( *)/g, (_, m1) => `,${m1.trim()} `);
 
@@ -324,8 +326,11 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
     return `${whitespace}${newContent.replace(/, $/, "")} {`;
   });
 
-  /* add space before declaration leading comments */
+  // add space before declaration leading comments
   output = output.replace(/:\/\*/g, ": /*");
+
+  // remove empty lines
+  output = output.replace(/\n{2,}/g, "\n").trim();
 
   // indent everything
   if (opts.indentCss && opts.indentCss > 0) {
