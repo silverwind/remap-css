@@ -23,6 +23,7 @@ const atRulesWithNoSelectors = new Set(["keyframes"]);
 const splitDecls = str => splitString(str, {separator: ";", quotes: [`"`, `'`]});
 const splitSelectors = str => splitString(str, {separator: ",", quotes: [`"`, `'`]});
 const joinSelectors = selectors => selectors.join(", ");
+const uniq = arr => Array.from(new Set(arr));
 
 function rewriteSelectors(selectors, opts) {
   const ret = [];
@@ -248,9 +249,10 @@ const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
             const targetNode = node.parent.type === "atrule" ? node.parent : node;
             const prevNode = targetNode.prev();
             if (prevNode && prevNode.type === "comment" && prevNode.text.startsWith(pkg.name)) {
-              prevNode.text += `, ${matchedDeclStrings.join(", ")}`;
+              const prevDeclStrings = prevNode.text.match(/".+?"/g);
+              prevNode.text = `${pkg.name} rule for ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
             } else {
-              root.insertBefore(targetNode, makeComment(`${pkg.name} rule for ${matchedDeclStrings.join(", ")}`));
+              root.insertBefore(targetNode, makeComment(`${pkg.name} rule for ${uniq(matchedDeclStrings).join(", ")}`));
             }
           }
 
@@ -278,6 +280,23 @@ const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
         node.remove();
       }
       if (!hasDeclarations(node)) node.remove();
+      if (node.type === "rule") {
+        // remove duplicate props (those are actual errors in the sources)
+        const seen = {};
+
+        node.walkDecls(decl => {
+          if (!seen[decl.prop]) seen[decl.prop] = [];
+          seen[decl.prop].push(decl);
+        });
+
+        for (const nodes of Object.values(seen)) {
+          if (nodes.length > 1) {
+            for (const node of nodes.slice(0, -1)) {
+              node.remove();
+            }
+          }
+        }
+      }
     });
   };
 });

@@ -303,3 +303,22 @@ test("prop replacement", makeTest({
       background-color: blue;
     }
 `}));
+
+test("duplicate props", makeTest({
+  sources: [{css: `
+    a {
+      background: green;
+      background: green;
+      background: red;
+      background: red;
+    }
+  `}],
+  mappings: {
+    "background: green": "background-color: yellow",
+    "background: red": "background-color: blue",
+  },
+  expected: `
+    a {
+      background-color: blue;
+    }
+`}));
