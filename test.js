@@ -222,9 +222,30 @@ test("atrules", makeTest({
     "$background: red": "blue",
   },
   expected: `
-  @media screen {
-    a {
-      background: blue;
+    @media screen {
+      a {
+        background: blue;
+      }
     }
-  }
 `}));
+
+test("atrules comments", makeTest({
+  sources: [{css: `
+    @media screen {
+      a {
+        background: red;
+      }
+      b {
+        background: green;
+      }
+    }
+  `}],
+  mappings: {
+    "$background: red": "blue",
+    "$background: green": "yellow",
+  },
+  opts: {
+    comments: true,
+  },
+  expectedExact: `/* remap-css rule for "background: red", "background: green" */\n@media screen {\n  a {\n    background: blue;\n  }\n  b {\n    background: yellow;\n  }\n}`,
+}));

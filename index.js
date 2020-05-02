@@ -245,7 +245,13 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
 
         if (newSelectors.length) {
           if (opts.comments) {
-            root.insertBefore(node, makeComment(`${pkg.name} rule for ${matchedDeclStrings.join(", ")}`));
+            const targetNode = node.parent.type === "atrule" ? node.parent : node;
+            const prevNode = targetNode.prev();
+            if (prevNode && prevNode.type === "comment" && prevNode.text.startsWith(pkg.name)) {
+              prevNode.text += `, ${matchedDeclStrings.join(", ")}`;
+            } else {
+              root.insertBefore(targetNode, makeComment(`${pkg.name} rule for ${matchedDeclStrings.join(", ")}`));
+            }
           }
           node.selector = joinSelectors(newSelectors);
         } else {
@@ -314,6 +320,9 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
     }
     return `${whitespace}${newContent.replace(/, $/, "")} {`;
   });
+
+  /* add space before declaration leading comments */
+  output = output.replace(/:\/\*/g, ": /*");
 
   // indent everything
   if (opts.indentCss && opts.indentCss > 0) {
