@@ -209,3 +209,22 @@ test("ignore atrules", makeTest({
   },
   expectedExact: `/* remap-css rule for "background: red" */\na {\nbackground: blue;\n}`,
 }));
+
+test("atrules", makeTest({
+  sources: [{css: `
+    @media screen {
+      a {
+        background: red;
+      }
+    }
+  `}],
+  mappings: {
+    "$background: red": "blue",
+  },
+  expected: `
+  @media screen {
+    a {
+      background: blue;
+    }
+  }
+`}));

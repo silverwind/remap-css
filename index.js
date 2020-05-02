@@ -209,18 +209,21 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
     const names = {};
     const preparedMappings = prepareMappings(mappings, names, opts);
 
-    root.walk(node => {
-      if (!["rule", "atrule"].includes(node.type)) return;
+    root.walkRules(node => {
       const matchedDeclStrings = [];
 
-      node.walkDecls((decl) => {
+      node.walkDecls(decl => {
         const declString = stringifyDecl({prop: decl.prop, value: decl.value, important: decl.important});
         const newDecls = [];
         if (preparedMappings[declString]) {
           matchedDeclStrings.push(`"${names[declString]}"`);
           for (const newDecl of preparedMappings[declString] || []) {
             const {value, important, origValue} = newDecl;
-            newDecls.push(decl.clone({value: origValue || value, important: Boolean(decl.important || important)}));
+            newDecls.push(decl.clone({
+              value: origValue || value,
+              important: Boolean(decl.important || important),
+              raws: {_replaced: true},
+            }));
           }
           decl.replaceWith(...newDecls);
         } else {
@@ -229,7 +232,8 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
       });
 
       if (matchedDeclStrings.length) {
-        const newSelectors = rewriteSelectors(splitSelectors(node.selector), opts).filter(selector => {
+        const selectors = splitSelectors(node.selector);
+        const newSelectors = rewriteSelectors(selectors, opts).filter(selector => {
           for (const re of opts.ignoreSelectors) {
             if (re.test(selector)) return false;
           }
@@ -245,6 +249,14 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
           node.remove();
         }
       }
+    });
+
+    root.walkAtRules(node => {
+      node.walkDecls(decl => {
+        if (!decl.raws._replaced) {
+          decl.remove();
+        }
+      });
     });
 
     root.walk(node => {
