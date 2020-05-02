@@ -222,7 +222,9 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
             newDecls.push(decl.clone({
               value: origValue || value,
               important: Boolean(decl.important || important),
-              raws: {_replaced: true},
+              raws: {
+                _replaced: true,
+              },
             }));
           }
           decl.replaceWith(...newDecls);
@@ -282,10 +284,13 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   output = prettier.format(output, {
     parser: "css",
     tabWidth: opts.indentSize,
-    printWidth: opts.lineLength - opts.indentCss,
+    printWidth: Infinity,
     useTabs: false,
     singleQuote: false,
   });
+
+  // move comments to their own line
+  output = output.replace(/} \/\*/g, "}\n/*");
 
   // remove empty lines
   output = output.replace(/\n{2,}/g, "\n").trim();
