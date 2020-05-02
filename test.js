@@ -178,3 +178,15 @@ test("indentSize 0, comments: true", makeTest({
   },
   expectedExact: `/* begin remap-css rules */\n/* remap-css rule for "color: red" */\na {\ncolor: blue;\n}\n/* end remap-css rules */`,
 }));
+
+test("special mapping name", makeTest({
+  sources: [{css: `a {background: red;}`}],
+  mappings: {
+    "$background: red": "blue",
+  },
+  opts: {
+    indentSize: 0,
+    comments: true,
+  },
+  expectedExact: `/* begin remap-css rules */\n/* remap-css rule for "background: red" */\na {\nbackground: blue;\n}\n/* end remap-css rules */`,
+}));

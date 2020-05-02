@@ -130,58 +130,56 @@ function stringifyDecl(decl) {
   return `${prop}: ${value}${important ? " !important" : ""}`;
 }
 
-function normalizeDeclString(declString) {
-  return stringifyDecl(parseDecl(declString)[0]);
-}
-
-function addMapping(mappings, fromStringDecl, toStringDecl) {
+function addMapping(mappings, names, fromStringDecl, toStringDecl) {
   const fromDecl = parseDecl(fromStringDecl)[0]; // can only be single declaration
   const toDecl = parseDecl(toStringDecl);
   if (!toStringDecl) return;
 
-  if (fromDecl.important) {
-    mappings[stringifyDecl(fromDecl)] = toDecl;
-  } else {
-    mappings[stringifyDecl(fromDecl)] = toDecl;
-    mappings[stringifyDecl({prop: fromDecl.prop, value: fromDecl.value, important: true})] = toDecl;
+  const newName = stringifyDecl(fromDecl);
+  names[newName] = fromStringDecl;
+  mappings[newName] = toDecl;
+
+  if (!fromDecl.important) {
+    const newNameImportant = stringifyDecl({prop: fromDecl.prop, value: fromDecl.value, important: true});
+    mappings[newNameImportant] = toDecl;
   }
 }
 
-function prepareMappings(mappings, opts) {
+function prepareMappings(mappings, names, opts) {
   const ret = {};
   for (const [key, value] of Object.entries(mappings)) {
     if (key.startsWith("$border: ")) {
       const oldValue = key.substring("$border: ".length);
-      addMapping(ret, `border-color: ${oldValue}`, `border-color: ${value}`);
-      addMapping(ret, `border: solid ${oldValue}`, `border-color: ${value}`);
-      addMapping(ret, `border: dashed ${oldValue}`, `border-color: ${value}`);
-      addMapping(ret, `border-top-color: ${oldValue}`, `border-top-color: ${value}`);
-      addMapping(ret, `border-bottom-color: ${oldValue}`, `border-bottom-color: ${value}`);
-      addMapping(ret, `border-left-color: ${oldValue}`, `border-left-color: ${value}`);
-      addMapping(ret, `border-right-color: ${oldValue}`, `border-right-color: ${value}`);
+      addMapping(ret, names, `border-color: ${oldValue}`, `border-color: ${value}`);
+      addMapping(ret, names, `border: solid ${oldValue}`, `border-color: ${value}`);
+      addMapping(ret, names, `border: dashed ${oldValue}`, `border-color: ${value}`);
+      addMapping(ret, names, `border-top-color: ${oldValue}`, `border-top-color: ${value}`);
+      addMapping(ret, names, `border-bottom-color: ${oldValue}`, `border-bottom-color: ${value}`);
+      addMapping(ret, names, `border-left-color: ${oldValue}`, `border-left-color: ${value}`);
+      addMapping(ret, names, `border-right-color: ${oldValue}`, `border-right-color: ${value}`);
       for (let i = 1; i <= opts.limitSpecial; i++) {
-        addMapping(ret, `border: ${i}px solid ${oldValue}`, `border-color: ${value}`);
-        addMapping(ret, `border: ${i}px dashed ${oldValue}`, `border-color: ${value}`);
-        addMapping(ret, `border-top: ${i}px solid ${oldValue}`, `border-top-color: ${value}`);
-        addMapping(ret, `border-top: ${i}px dashed ${oldValue}`, `border-top-color: ${value}`);
-        addMapping(ret, `border-bottom: ${i}px solid ${oldValue}`, `border-bottom-color: ${value}`);
-        addMapping(ret, `border-bottom: ${i}px dashed ${oldValue}`, `border-bottom-color: ${value}`);
-        addMapping(ret, `border-left: ${i}px solid ${oldValue}`, `border-left-color: ${value}`);
-        addMapping(ret, `border-left: ${i}px dashed ${oldValue}`, `border-left-color: ${value}`);
-        addMapping(ret, `border-right: ${i}px solid ${oldValue}`, `border-right-color: ${value}`);
-        addMapping(ret, `border-right: ${i}px dashed ${oldValue}`, `border-right-color: ${value}`);
+        addMapping(ret, names, `border: ${i}px solid ${oldValue}`, `border-color: ${value}`);
+        addMapping(ret, names, `border: ${i}px dashed ${oldValue}`, `border-color: ${value}`);
+        addMapping(ret, names, `border-top: ${i}px solid ${oldValue}`, `border-top-color: ${value}`);
+        addMapping(ret, names, `border-top: ${i}px dashed ${oldValue}`, `border-top-color: ${value}`);
+        addMapping(ret, names, `border-bottom: ${i}px solid ${oldValue}`, `border-bottom-color: ${value}`);
+        addMapping(ret, names, `border-bottom: ${i}px dashed ${oldValue}`, `border-bottom-color: ${value}`);
+        addMapping(ret, names, `border-left: ${i}px solid ${oldValue}`, `border-left-color: ${value}`);
+        addMapping(ret, names, `border-left: ${i}px dashed ${oldValue}`, `border-left-color: ${value}`);
+        addMapping(ret, names, `border-right: ${i}px solid ${oldValue}`, `border-right-color: ${value}`);
+        addMapping(ret, names, `border-right: ${i}px dashed ${oldValue}`, `border-right-color: ${value}`);
       }
     } else if (key.startsWith("$background: ")) {
       const oldValue = key.substring("$background: ".length);
-      addMapping(ret, `background: ${oldValue}`, `background: ${value}`);
-      addMapping(ret, `background: ${oldValue} none`, `background: ${value}`);
-      addMapping(ret, `background: none ${oldValue}`, `background: ${value}`);
-      addMapping(ret, `background-color: ${oldValue}`, `background-color: ${value}`);
-      addMapping(ret, `background-image: ${oldValue}`, `background-image: ${value}`);
-      addMapping(ret, `background-image: ${oldValue} none`, `background-image: ${value}`);
-      addMapping(ret, `background-image: none ${oldValue}`, `background-image: ${value}`);
+      addMapping(ret, names, `background: ${oldValue}`, `background: ${value}`);
+      addMapping(ret, names, `background: ${oldValue} none`, `background: ${value}`);
+      addMapping(ret, names, `background: none ${oldValue}`, `background: ${value}`);
+      addMapping(ret, names, `background-color: ${oldValue}`, `background-color: ${value}`);
+      addMapping(ret, names, `background-image: ${oldValue}`, `background-image: ${value}`);
+      addMapping(ret, names, `background-image: ${oldValue} none`, `background-image: ${value}`);
+      addMapping(ret, names, `background-image: none ${oldValue}`, `background-image: ${value}`);
     } else {
-      addMapping(ret, key, value);
+      addMapping(ret, names, key, value);
     }
   }
 
@@ -208,16 +206,8 @@ function makeComment(text) {
 
 const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
   return async (root, _result) => {
-    const mappingsNormalizationMap = {};
-
-    // map normalized declarations back to entered ones for comment creation
-    if (opts.comments) {
-      for (const declString of Object.keys(mappings)) {
-        mappingsNormalizationMap[normalizeDeclString(declString)] = declString;
-      }
-    }
-
-    const preparedMappings = prepareMappings(mappings, opts);
+    const names = {};
+    const preparedMappings = prepareMappings(mappings, names, opts);
 
     root.walkRules(rule => {
       const matchedDeclStrings = [];
@@ -226,7 +216,7 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
         const declString = stringifyDecl({prop: decl.prop, value: decl.value, important: decl.important});
         const newDecls = [];
         if (preparedMappings[declString]) {
-          matchedDeclStrings.push(`"${mappingsNormalizationMap[declString]}"`);
+          matchedDeclStrings.push(`"${names[declString]}"`);
           for (const newDecl of preparedMappings[declString] || []) {
             const {value, important, origValue} = newDecl;
             newDecls.push(decl.clone({value: origValue || value, important: Boolean(decl.important || important)}));
