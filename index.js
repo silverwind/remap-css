@@ -292,10 +292,13 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   const names = {};
   const preparedMappings = prepareMappings(mappings, names, opts);
 
+  const results = await Promise.all(sources.map(({css, prefix, match}) => {
+    return postcss([plugin(preparedMappings, names, {...opts, prefix, match})]).process(css, {parser: postcssSafeParser, from: undefined});
+  }));
+
   let output = "";
-  for (const {css, prefix, match} of sources) {
-    const result = await postcss([plugin(preparedMappings, names, {...opts, prefix, match})]).process(css, {parser: postcssSafeParser, from: undefined});
-    output += result.css;
+  for (const {css} of results) {
+    output += css;
   }
 
   output = prettierFormat(output, opts);

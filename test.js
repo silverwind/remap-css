@@ -44,6 +44,23 @@ test("basic", makeTest({
     }
 `}));
 
+test("multiple sources", makeTest({
+  sources: [
+    {css: `a {color: red;}`},
+    {css: `b {color: red;}`},
+  ],
+  mappings: {
+    "color: red": "color: blue",
+  },
+  expected: `
+    a {
+      color: blue;
+    }
+    b {
+      color: blue;
+    }
+`}));
+
 test("multiple selectors", makeTest({
   sources: [{css: `
     a,b {color: red;}
