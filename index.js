@@ -20,8 +20,8 @@ const defaults = {
 
 const atRulesWithNoSelectors = new Set(["keyframes"]);
 
-const splitDecls = str => splitString(str, {separator: ";", quotes: [`"`, `'`]});
-const splitSelectors = str => splitString(str, {separator: ",", quotes: [`"`, `'`]});
+const splitDecls = str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim());
+const splitSelectors = str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim());
 const joinSelectors = selectors => selectors.join(", ");
 const uniq = arr => Array.from(new Set(arr));
 
