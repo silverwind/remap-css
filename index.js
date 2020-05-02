@@ -141,6 +141,7 @@ function addMapping(mappings, names, fromStringDecl, toStringDecl) {
 
   if (!fromDecl.important) {
     const newNameImportant = stringifyDecl({prop: fromDecl.prop, value: fromDecl.value, important: true});
+    names[newNameImportant] = `${fromStringDecl} !important`;
     mappings[newNameImportant] = toDecl;
   }
 }
@@ -272,6 +273,16 @@ const plugin = postcss.plugin(pkg.name, (mappings, opts) => {
   };
 });
 
+function prettierFormat(css, opts) {
+  return prettier.format(css, {
+    parser: "css",
+    tabWidth: opts.indentSize,
+    printWidth: Infinity,
+    useTabs: false,
+    singleQuote: false,
+  });
+}
+
 module.exports = async function remapCss(sources, mappings, opts = {}) {
   opts = Object.assign({}, defaults, opts);
 
@@ -281,13 +292,7 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
     output += result.css;
   }
 
-  output = prettier.format(output, {
-    parser: "css",
-    tabWidth: opts.indentSize,
-    printWidth: Infinity,
-    useTabs: false,
-    singleQuote: false,
-  });
+  output = prettierFormat(output, opts);
 
   // move comments to their own line
   output = output.replace(/} \/\*/g, "}\n/*");
