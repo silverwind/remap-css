@@ -316,9 +316,10 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
 
   const names = {};
   const preparedMappings = prepareMappings(mappings, names, opts);
+  const postcssOpts = {parser: postcssSafeParser, from: undefined};
 
   const results = await Promise.all(sources.map(({css, prefix, match}) => {
-    return postcss([plugin(preparedMappings, names, {...opts, prefix, match})]).process(css, {parser: postcssSafeParser, from: undefined});
+    return postcss([plugin(preparedMappings, names, {...opts, prefix, match})]).process(css, postcssOpts);
   }));
 
   let output = "";
@@ -339,15 +340,14 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
     let newContent = "";
     const parts = content.split(", ").filter(p => !!p);
     const lastIndex = parts.length - 1;
-    for (let [index, part] of Object.entries(parts)) {
-      index = Number(index);
+    for (const [index, part] of Object.entries(parts)) {
       const currentLength = /.*$/.exec(newContent)[0].length;
       const requiredLength = opts.lineLength - part.length - whitespace.length;
       if (requiredLength < currentLength) {
         newContent = newContent.replace(/ $/g, "");
         newContent += `\n${whitespace}`;
       }
-      newContent += `${part.trim()}${index !== lastIndex ? ", " : ""}`;
+      newContent += `${part.trim()}${Number(index) !== lastIndex ? ", " : ""}`;
     }
     return `${whitespace}${newContent.trim()} {`;
   });
