@@ -220,12 +220,12 @@ const isValidDeclaration = memoize((prop, value) => {
 });
 
 // this may add extra newlines, but those are trimmed off later
-const makeComment = memoize(text => {
+function makeComment(text) {
   return postcss.comment({
     raws: {before: "\n", after: "\n", left: " ", right: " "},
     text,
   });
-});
+}
 
 const plugin = postcss.plugin("remap-css", (preparedMappings, names, opts) => {
   return async root => {
