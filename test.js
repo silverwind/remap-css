@@ -320,8 +320,6 @@ test("duplicate props", makeTest({
   expected: `
     a {
       background-color: yellow;
-      background-color: yellow;
-      background-color: blue;
       background-color: blue;
     }
 `}));

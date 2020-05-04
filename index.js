@@ -2,11 +2,11 @@
 
 const cssColorNames = require("css-color-names");
 const postcss = require("postcss");
+const postcssDiscardDuplicates = require("postcss-discard-duplicates");
 const postcssSafeParser = require("postcss-safe-parser");
 const prettier = require("prettier");
 const splitString = require("split-string");
 const {isShorthand} = require("css-shorthand-properties");
-const pkg = require("./package.json");
 
 const defaults = {
   indentSize: 2,
@@ -208,7 +208,7 @@ function makeComment(text) {
   });
 }
 
-const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
+const plugin = postcss.plugin("remap-css", (preparedMappings, names, opts) => {
   return async root => {
     root.walkRules(node => {
       const matchedDeclStrings = [];
@@ -249,11 +249,11 @@ const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
           if (opts.comments) {
             const targetNode = node.parent.type === "atrule" ? node.parent : node;
             const prevNode = targetNode.prev();
-            if (prevNode && prevNode.type === "comment" && prevNode.text.startsWith(pkg.name)) {
+            if (prevNode && prevNode.type === "comment" && prevNode.text.startsWith("remap-css")) {
               const prevDeclStrings = prevNode.text.match(/".+?"/g);
-              prevNode.text = `${pkg.name} rule for ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
+              prevNode.text = `remap-css rule for ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
             } else {
-              root.insertBefore(targetNode, makeComment(`${pkg.name} rule for ${uniq(matchedDeclStrings).join(", ")}`));
+              root.insertBefore(targetNode, makeComment(`remap-css rule for ${uniq(matchedDeclStrings).join(", ")}`));
             }
           }
 
@@ -277,7 +277,7 @@ const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
     root.walk(node => {
       if (node.type === "decl") return;
       if (node.type === "comment") {
-        if (node.text.startsWith(`${pkg.name} rule for`)) return;
+        if (node.text.startsWith("remap-css rule for")) return;
         node.remove();
       }
       if (!hasDeclarations(node)) node.remove();
@@ -329,6 +329,10 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
     output += css;
   }
 
+  // optimize
+  output = (await postcss([postcssDiscardDuplicates]).process(output, postcssOpts)).css;
+
+  // format
   output = prettierFormat(output, opts);
 
   // move comments to their own line
@@ -359,6 +363,9 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
 
   // remove empty lines
   output = output.replace(/\n{2,}/g, "\n").trim();
+
+  // remove obsolete comments
+  output = output.replace(/\* remap-css rule for.+\/[\n ]\//gm, "");
 
   // indent everything
   if (opts.indentCss && opts.indentCss > 0) {

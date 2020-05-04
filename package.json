@@ -25,6 +25,7 @@
     "css-color-names": "1.0.1",
     "css-shorthand-properties": "1.1.1",
     "postcss": "7.0.29",
+    "postcss-discard-duplicates": "4.0.2",
     "postcss-safe-parser": "4.0.2",
     "prettier": "2.0.5",
     "split-string": "6.1.0"
