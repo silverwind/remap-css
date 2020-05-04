@@ -3,7 +3,11 @@
 const cssColorNames = require("css-color-names");
 const postcss = require("postcss");
 const postcssDiscardDuplicates = require("postcss-discard-duplicates");
+const postcssDiscardEmpty = require("postcss-discard-empty");
+const postcssDiscardOverridden = require("postcss-discard-overridden");
+const postcssMergeRules = require("postcss-merge-rules");
 const postcssSafeParser = require("postcss-safe-parser");
+const postcssUniqueSelectors = require("postcss-unique-selectors");
 const prettier = require("prettier");
 const splitString = require("split-string");
 const {isShorthand} = require("css-shorthand-properties");
@@ -330,7 +334,14 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   }
 
   // optimize
-  output = (await postcss([postcssDiscardDuplicates]).process(output, postcssOpts)).css;
+  const plugins = [
+    postcssDiscardDuplicates,
+    postcssDiscardEmpty,
+    postcssDiscardOverridden,
+    postcssMergeRules,
+    postcssUniqueSelectors,
+  ];
+  output = (await postcss(plugins).process(output, postcssOpts)).css;
 
   // format
   output = prettierFormat(output, opts);

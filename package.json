@@ -26,7 +26,11 @@
     "css-shorthand-properties": "1.1.1",
     "postcss": "7.0.29",
     "postcss-discard-duplicates": "4.0.2",
+    "postcss-discard-empty": "4.0.1",
+    "postcss-discard-overridden": "4.0.1",
+    "postcss-merge-rules": "4.0.3",
     "postcss-safe-parser": "4.0.2",
+    "postcss-unique-selectors": "4.0.1",
     "prettier": "2.0.5",
     "split-string": "6.1.0"
   },

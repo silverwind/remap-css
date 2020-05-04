@@ -53,10 +53,7 @@ test("multiple sources", makeTest({
     "color: red": "color: blue",
   },
   expected: `
-    a {
-      color: blue;
-    }
-    b {
+    a, b {
       color: blue;
     }
 `}));
@@ -83,10 +80,7 @@ test("single selectors", makeTest({
     "color: red": "color: blue",
   },
   expected: `
-    a {
-      color: blue;
-    }
-    b {
+    a, b {
       color: blue;
     }
 `}));
@@ -100,9 +94,6 @@ test("duplicate rules", makeTest({
     "color: red": "color: blue",
   },
   expected: `
-    b {
-      color: blue;
-    }
     a, b {
       color: blue;
     }
@@ -139,10 +130,7 @@ test("important", makeTest({
     b {
       background: blue !important;
     }
-    a {
-      background: green !important;
-    }
-    b {
+    a, b {
       background: green !important;
     }
 `}));
@@ -162,10 +150,7 @@ test("order", makeTest({
     a {
       background: blue;
     }
-    b {
-      background: green;
-    }
-    c {
+    b, c {
       background: green;
     }
     d {
