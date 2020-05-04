@@ -319,6 +319,31 @@ test("duplicate props", makeTest({
   },
   expected: `
     a {
+      background-color: yellow;
+      background-color: yellow;
       background-color: blue;
+      background-color: blue;
+    }
+`}));
+
+test("duplicate props", makeTest({
+  sources: [{css: `
+    .link-mktg:hover {
+      color: #0366d6;
+      box-shadow: 0 1px 0 0 #1074e7
+    }
+  `}],
+  mappings: {
+    "color: #0366d6": "color: /*[[base-color]]*/ #4f8cc9",
+    "box-shadow: 0 1px 0 0 #1074e7": `
+      box-shadow: 0 1px 0 0 #4f8cc9;
+      box-shadow: 0 1px 0 0 /*[[base-color]]*/
+    `,
+  },
+  expected: `
+    .link-mktg:hover {
+      color: /*[[base-color]]*/ #4f8cc9;
+      box-shadow: 0 1px 0 0 #4f8cc9;
+      box-shadow: 0 1px 0 0 /*[[base-color]]*/;
     }
 `}));

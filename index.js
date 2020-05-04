@@ -230,6 +230,7 @@ const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
             }));
           }
           decl.replaceWith(...newDecls);
+          if (!node.raws.semicolon) node.raws.semicolon = true; // ensure semicolon at the end of the rule
         } else {
           decl.remove();
         }
@@ -285,6 +286,7 @@ const plugin = postcss.plugin(pkg.name, (preparedMappings, names, opts) => {
         const seen = {};
 
         node.walkDecls(decl => {
+          if (decl.raws._replaced) return;
           if (!seen[decl.prop]) seen[decl.prop] = [];
           seen[decl.prop].push(decl);
         });
