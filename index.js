@@ -1,6 +1,8 @@
 "use strict";
 
 const cssColorNames = require("css-color-names");
+const csstreeValidator = require("csstree-validator");
+const memoize = require("nano-memoize");
 const postcss = require("postcss");
 const postcssDiscardDuplicates = require("postcss-discard-duplicates");
 const postcssDiscardEmpty = require("postcss-discard-empty");
@@ -20,12 +22,13 @@ const defaults = {
   limitSpecial: 25,
   comments: false,
   stylistic: false,
+  validate: false,
 };
 
 const atRulesWithNoSelectors = new Set(["keyframes"]);
 
-const splitDecls = str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim());
-const splitSelectors = str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim());
+const splitDecls = memoize(str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
+const splitSelectors = memoize(str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
 const joinSelectors = selectors => selectors.join(", ");
 const uniq = arr => Array.from(new Set(arr));
 
@@ -73,7 +76,7 @@ function rewriteSelectors(selectors, opts) {
   return ret;
 }
 
-function normalizeHexColor(value) {
+const normalizeHexColor = memoize(value => {
   if ([4, 5].includes(value.length)) {
     const [h, r, g, b, a] = value;
     return `${h}${r}${r}${g}${g}${b}${b}${a || "f"}${a || "f"}`;
@@ -81,7 +84,7 @@ function normalizeHexColor(value) {
     return `${value}ff`;
   }
   return value;
-}
+});
 
 function normalizeDecl({prop, value, important}) {
   prop = prop.toLowerCase();
@@ -117,7 +120,7 @@ function normalizeDecl({prop, value, important}) {
 }
 
 // returns an array of declarations
-function parseDecl(declString) {
+const parseDecl = memoize((declString) => {
   declString = declString.trim().replace(/;+$/, "").trim();
 
   const ret = [];
@@ -130,7 +133,7 @@ function parseDecl(declString) {
     ret.push(normalizeDecl({prop, value, important}));
   }
   return ret;
-}
+});
 
 function stringifyDecl(decl) {
   const {prop, value, important} = normalizeDecl(decl);
@@ -204,13 +207,25 @@ function hasDeclarations(root) {
   return false;
 }
 
+const isValidDeclaration = memoize((prop, value) => {
+  try {
+    value = value.replace(/\/\*\[\[.+?\]\]\*\//g, "var(--name)");
+    const rule = `a{${prop}: ${value}}`;
+    const result = csstreeValidator.validateString(rule);
+    const hadError = result["<unknown>"] && result["<unknown>"][0] && result["<unknown>"][0].error instanceof Error;
+    return !hadError;
+  } catch {
+    return false;
+  }
+});
+
 // this may add extra newlines, but those are trimmed off later
-function makeComment(text) {
+const makeComment = memoize(text => {
   return postcss.comment({
     raws: {before: "\n", after: "\n", left: " ", right: " "},
     text,
   });
-}
+});
 
 const plugin = postcss.plugin("remap-css", (preparedMappings, names, opts) => {
   return async root => {
@@ -221,20 +236,28 @@ const plugin = postcss.plugin("remap-css", (preparedMappings, names, opts) => {
         const declString = stringifyDecl({prop: decl.prop, value: decl.value, important: decl.important});
         const newDecls = [];
         if (preparedMappings[declString]) {
-          matchedDeclStrings.push(`"${names[declString]}"`);
           for (const newDecl of preparedMappings[declString] || []) {
             const {prop, value, important, origValue} = newDecl;
+            const newProp = prop;
+            const newValue = origValue || value;
+            const newImportant = Boolean(decl.important || important);
+            if (opts.validate && !isValidDeclaration(newProp, newValue)) {
+              return decl.remove();
+            }
             newDecls.push(decl.clone({
-              prop,
-              value: origValue || value,
-              important: Boolean(decl.important || important),
-              raws: {
-                _replaced: true,
-              },
+              prop: newProp,
+              value: newValue,
+              important: newImportant,
+              raws: {_replaced: true},
             }));
+            matchedDeclStrings.push(`"${names[declString]}"`);
           }
+
           decl.replaceWith(...newDecls);
-          if (!node.raws.semicolon) node.raws.semicolon = true; // ensure semicolon at the end of the rule
+
+          if (!node.raws.semicolon) {
+            node.raws.semicolon = true; // ensure semicolon at the end of the rule
+          }
         } else {
           decl.remove();
         }

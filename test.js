@@ -330,3 +330,23 @@ test("duplicate props", makeTest({
       box-shadow: 0 1px 0 0 /*[[base-color]]*/;
     }
 `}));
+
+test("validate", makeTest({
+  sources: [{css: `
+    a {
+      color: red;
+      background-color: linear-gradient(red, blue);
+    }
+  `}],
+  mappings: {
+    "color: red": "color: blue",
+    "$background: linear-gradient(red, blue)": "linear-gradient(-180deg, #202020 0%, #181818 90%)",
+  },
+  opts: {
+    validate: true,
+  },
+  expected: `
+    a {
+      color: blue;
+    }
+`}));

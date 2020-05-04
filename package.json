@@ -24,6 +24,8 @@
   "dependencies": {
     "css-color-names": "1.0.1",
     "css-shorthand-properties": "1.1.1",
+    "csstree-validator": "1.5.1",
+    "nano-memoize": "1.1.10",
     "postcss": "7.0.29",
     "postcss-discard-duplicates": "4.0.2",
     "postcss-discard-empty": "4.0.1",
