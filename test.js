@@ -178,7 +178,7 @@ test("indentSize 0, comments: true", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* remap-css rule for "color: red" */\na {\ncolor: blue;\n}`,
+  expectedExact: `/* source #0: "color: red" */\na {\ncolor: blue;\n}`,
 }));
 
 test("special mapping name", makeTest({
@@ -190,7 +190,7 @@ test("special mapping name", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* remap-css rule for "background: red" */\na {\nbackground: blue;\n}`,
+  expectedExact: `/* source #0: "background: red" */\na {\nbackground: blue;\n}`,
 }));
 
 test("ignore atrules", makeTest({
@@ -209,7 +209,7 @@ test("ignore atrules", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* remap-css rule for "background: red" */\na {\nbackground: blue;\n}`,
+  expectedExact: `/* source #0: "background: red" */\na {\nbackground: blue;\n}`,
 }));
 
 test("atrules", makeTest({
@@ -249,7 +249,7 @@ test("atrules comments", makeTest({
   opts: {
     comments: true,
   },
-  expectedExact: `/* remap-css rule for "background: red", "background: green" */\n@media screen {\n  a {\n    background: blue;\n  }\n  b {\n    background: yellow;\n  }\n}`,
+  expectedExact: `/* source #0: "background: red", "background: green" */\n@media screen {\n  a {\n    background: blue;\n  }\n  b {\n    background: yellow;\n  }\n}`,
 }));
 
 test("keyframe atrule, no prefix", makeTest({

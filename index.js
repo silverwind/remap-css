@@ -25,6 +25,7 @@ const defaults = {
   validate: false,
 };
 
+const prefix = "source #";
 const atRulesWithNoSelectors = new Set(["keyframes"]);
 
 const splitDecls = memoize(str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
@@ -227,7 +228,7 @@ function makeComment(text) {
   });
 }
 
-const plugin = postcss.plugin("remap-css", (preparedMappings, names, opts) => {
+const plugin = postcss.plugin("remap-css", (preparedMappings, names, index, opts) => {
   return async root => {
     root.walkRules(node => {
       const matchedDeclStrings = [];
@@ -276,11 +277,11 @@ const plugin = postcss.plugin("remap-css", (preparedMappings, names, opts) => {
           if (opts.comments) {
             const targetNode = node.parent.type === "atrule" ? node.parent : node;
             const prevNode = targetNode.prev();
-            if (prevNode && prevNode.type === "comment" && prevNode.text.startsWith("remap-css")) {
+            if (prevNode && prevNode.type === "comment" && prevNode.text.startsWith(prefix)) {
               const prevDeclStrings = prevNode.text.match(/".+?"/g);
-              prevNode.text = `remap-css rule for ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
+              prevNode.text = `${prefix}${index}: ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
             } else {
-              root.insertBefore(targetNode, makeComment(`remap-css rule for ${uniq(matchedDeclStrings).join(", ")}`));
+              root.insertBefore(targetNode, makeComment(`${prefix}${index}: ${uniq(matchedDeclStrings).join(", ")}`));
             }
           }
 
@@ -304,7 +305,7 @@ const plugin = postcss.plugin("remap-css", (preparedMappings, names, opts) => {
     root.walk(node => {
       if (node.type === "decl") return;
       if (node.type === "comment") {
-        if (node.text.startsWith("remap-css rule for")) return;
+        if (node.text.startsWith(prefix)) return;
         node.remove();
       }
       if (!hasDeclarations(node)) node.remove();
@@ -347,8 +348,8 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   const preparedMappings = prepareMappings(mappings, names, opts);
   const postcssOpts = {parser: postcssSafeParser, from: undefined};
 
-  const results = await Promise.all(sources.map(({css, prefix, match}) => {
-    return postcss([plugin(preparedMappings, names, {...opts, prefix, match})]).process(css, postcssOpts);
+  const results = await Promise.all(sources.map(({css, prefix, match}, index) => {
+    return postcss([plugin(preparedMappings, names, index, {...opts, prefix, match})]).process(css, postcssOpts);
   }));
 
   let output = "";
@@ -399,7 +400,7 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   output = output.replace(/\n{2,}/g, "\n").trim();
 
   // remove obsolete comments
-  output = output.replace(/\* remap-css rule for.+\/[\n ]\//gm, "");
+  output = output.replace(/\* source #.+\/[\n ]\//gm, "");
 
   // indent everything
   if (opts.indentCss && opts.indentCss > 0) {
