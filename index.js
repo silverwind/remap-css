@@ -23,17 +23,31 @@ const defaults = {
   comments: false,
   stylistic: false,
   validate: false,
+  sourceNames: false,
 };
 
 const prefix = "source #";
 const atRulesWithNoSelectors = new Set(["keyframes"]);
-
 const splitDecls = memoize(str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
 const splitSelectors = memoize(str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
 const joinSelectors = selectors => selectors.join(", ");
 const uniq = arr => Array.from(new Set(arr));
 
-function rewriteSelectors(selectors, opts) {
+function srcName(src, index, opts) {
+  if (!opts.sourceNames) {
+    return `${prefix}${index}`;
+  } else if (src.name) {
+    return `${src.name}`;
+  } else if (src.crx) {
+    return `crx ${src.crx}`;
+  } else if (src.url) {
+    return `${src.url}`;
+  } else {
+    return `${prefix}${index}`;
+  }
+}
+
+function rewriteSelectors(selectors, opts, src) {
   const ret = [];
 
   for (let selector of selectors) {
@@ -48,11 +62,11 @@ function rewriteSelectors(selectors, opts) {
     }
 
     // add prefix
-    if (opts.prefix) {
+    if (src.prefix) {
       // skip adding a prefix if it matches a selector in `match`
       let skip = false;
-      if (opts.match) {
-        for (const match of opts.match) {
+      if (src.match) {
+        for (const match of src.match) {
           const first = selector.split(/\s+/)[0];
           if ((/^[.#]+/.test(first) && first === match) || first.startsWith(match)) {
             skip = true;
@@ -63,10 +77,10 @@ function rewriteSelectors(selectors, opts) {
 
       if (!skip) {
         // incomplete check to avoid generating invalid "html :root" selectors
-        if (selector.startsWith(":root ") && opts.prefix.startsWith("html")) {
-          selector = `${opts.prefix} ${selector.substring(":root ".length)}`;
+        if (selector.startsWith(":root ") && src.prefix.startsWith("html")) {
+          selector = `${src.prefix} ${selector.substring(":root ".length)}`;
         } else {
-          selector = `${opts.prefix} ${selector}`;
+          selector = `${src.prefix} ${selector}`;
         }
       }
     }
@@ -228,7 +242,9 @@ function makeComment(text) {
   });
 }
 
-const plugin = postcss.plugin("remap-css", (preparedMappings, names, index, opts) => {
+const plugin = postcss.plugin("remap-css", (src, preparedMappings, names, index, opts) => {
+  const commentStart = srcName(src, index, opts);
+
   return async root => {
     root.walkRules(node => {
       const matchedDeclStrings = [];
@@ -266,7 +282,7 @@ const plugin = postcss.plugin("remap-css", (preparedMappings, names, index, opts
 
       if (matchedDeclStrings.length) {
         const selectors = splitSelectors(node.selector);
-        const newSelectors = rewriteSelectors(selectors, opts).filter(selector => {
+        const newSelectors = rewriteSelectors(selectors, opts, src).filter(selector => {
           for (const re of opts.ignoreSelectors) {
             if (re.test(selector)) return false;
           }
@@ -277,11 +293,12 @@ const plugin = postcss.plugin("remap-css", (preparedMappings, names, index, opts
           if (opts.comments) {
             const targetNode = node.parent.type === "atrule" ? node.parent : node;
             const prevNode = targetNode.prev();
-            if (prevNode && prevNode.type === "comment" && prevNode.text.startsWith(prefix)) {
+
+            if (prevNode && prevNode.type === "comment" && prevNode.text && prevNode.text.startsWith(commentStart)) {
               const prevDeclStrings = prevNode.text.match(/".+?"/g);
-              prevNode.text = `${prefix}${index}: ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
+              prevNode.text = `${commentStart}: ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
             } else {
-              root.insertBefore(targetNode, makeComment(`${prefix}${index}: ${uniq(matchedDeclStrings).join(", ")}`));
+              root.insertBefore(targetNode, makeComment(`${commentStart}: ${uniq(matchedDeclStrings).join(", ")}`));
             }
           }
 
@@ -305,7 +322,7 @@ const plugin = postcss.plugin("remap-css", (preparedMappings, names, index, opts
     root.walk(node => {
       if (node.type === "decl") return;
       if (node.type === "comment") {
-        if (node.text.startsWith(prefix)) return;
+        if (node.text.startsWith(commentStart)) return;
         node.remove();
       }
       if (!hasDeclarations(node)) node.remove();
@@ -348,8 +365,9 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   const preparedMappings = prepareMappings(mappings, names, opts);
   const postcssOpts = {parser: postcssSafeParser, from: undefined};
 
-  const results = await Promise.all(sources.map(({css, prefix, match}, index) => {
-    return postcss([plugin(preparedMappings, names, index, {...opts, prefix, match})]).process(css, postcssOpts);
+  const results = await Promise.all(sources.map((src, index) => {
+    const plug = plugin(src, preparedMappings, names, index, {...opts});
+    return postcss([plug]).process(src.css, postcssOpts);
   }));
 
   let output = "";
@@ -400,7 +418,7 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   output = output.replace(/\n{2,}/g, "\n").trim();
 
   // remove obsolete comments
-  output = output.replace(/\* source #.+\/[\n ]\//gm, "");
+  output = output.replace(/\* .+\/[\n ]\//gm, "");
 
   // indent everything
   if (opts.indentCss && opts.indentCss > 0) {

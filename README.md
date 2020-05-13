@@ -36,6 +36,7 @@ Returns a `Promise` that resolves to a CSS string.
   - `comments`: *boolean* Whether to output comments. Default: `false`.
   - `stylistic`: *boolean* Whether to perform stylistic tweaks on selectors. Default: `false`.
   - `validate`: *boolean* Validate CSS property values and ignore declarations that fail it. Default: `false`.
+  - `sourceNames` *boolean* Whether to use source names in comments. Default: `false`.
 
 There are special mapping keys supported to reduce the need for similar `border` and `background` rules:
 

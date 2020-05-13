@@ -350,3 +350,16 @@ test("validate", makeTest({
       color: blue;
     }
 `}));
+
+test("sourceNames", makeTest({
+  sources: [{css: `a {color: red;}`, name: "test"}],
+  mappings: {
+    "color: red": "color: blue",
+  },
+  opts: {
+    indentSize: 0,
+    comments: true,
+    sourceNames: true,
+  },
+  expectedExact: `/* test: "color: red" */\na {\ncolor: blue;\n}`,
+}));
