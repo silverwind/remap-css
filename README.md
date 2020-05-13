@@ -26,6 +26,7 @@ Returns a `Promise` that resolves to a CSS string.
     - `css`: *string* A CSS string
     - `prefix`: *string* A CSS selector to be prefixed to all output rules
     - `match`: *string* A array of plain CSS selectors that prevent a prefix addition on exact match
+    - `name`: *string* Optional name used in comments
 - `mappings`: *Object* CSS declaration value-to-value mapping. The key is either a exact match CSS declaration or a special rule starting with `$`. The value is the corresponding replacement declaration or a color in the case of a special rule.
 - `options`: *Object*
   - `indentSize`: *number* Numbers of spaces to indent rules and declarations. Default: `2`.
@@ -36,7 +37,6 @@ Returns a `Promise` that resolves to a CSS string.
   - `comments`: *boolean* Whether to output comments. Default: `false`.
   - `stylistic`: *boolean* Whether to perform stylistic tweaks on selectors. Default: `false`.
   - `validate`: *boolean* Validate CSS property values and ignore declarations that fail it. Default: `false`.
-  - `sourceNames` *boolean* Whether to use source names in comments. Default: `false`.
 
 There are special mapping keys supported to reduce the need for similar `border` and `background` rules:
 

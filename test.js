@@ -359,7 +359,6 @@ test("sourceNames", makeTest({
   opts: {
     indentSize: 0,
     comments: true,
-    sourceNames: true,
   },
   expectedExact: `/* test: "color: red" */\na {\ncolor: blue;\n}`,
 }));

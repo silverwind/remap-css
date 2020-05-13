@@ -23,7 +23,6 @@ const defaults = {
   comments: false,
   stylistic: false,
   validate: false,
-  sourceNames: false,
 };
 
 const prefix = "source #";
@@ -33,18 +32,8 @@ const splitSelectors = memoize(str => splitString(str, {separator: ",", quotes: 
 const joinSelectors = selectors => selectors.join(", ");
 const uniq = arr => Array.from(new Set(arr));
 
-function srcName(src, index, opts) {
-  if (!opts.sourceNames) {
-    return `${prefix}${index}`;
-  } else if (src.name) {
-    return `${src.name}`;
-  } else if (src.crx) {
-    return `crx ${src.crx}`;
-  } else if (src.url) {
-    return `${src.url}`;
-  } else {
-    return `${prefix}${index}`;
-  }
+function srcName(src, index) {
+  return src.name || `${prefix}${index}`;
 }
 
 function rewriteSelectors(selectors, opts, src) {
