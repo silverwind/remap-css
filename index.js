@@ -366,6 +366,7 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
 
   // optimize
   const plugins = [
+    postcssUniqueSelectors,
     postcssDiscardDuplicates,
     postcssDiscardEmpty,
     postcssDiscardOverridden,
