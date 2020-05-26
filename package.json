@@ -25,8 +25,8 @@
     "css-color-names": "1.0.1",
     "css-shorthand-properties": "1.1.1",
     "csstree-validator": "1.5.1",
-    "nano-memoize": "1.1.10",
-    "postcss": "7.0.30",
+    "nano-memoize": "1.1.11",
+    "postcss": "7.0.31",
     "postcss-discard-duplicates": "4.0.2",
     "postcss-discard-empty": "4.0.1",
     "postcss-discard-overridden": "4.0.1",
@@ -37,11 +37,11 @@
     "split-string": "6.1.0"
   },
   "devDependencies": {
-    "eslint": "7.0.0",
-    "eslint-config-silverwind": "13.3.2",
+    "eslint": "7.1.0",
+    "eslint-config-silverwind": "13.4.2",
     "jest": "26.0.1",
-    "updates": "10.2.11",
-    "versions": "8.2.9"
+    "updates": "10.2.13",
+    "versions": "8.2.10"
   },
   "jest": {
     "verbose": false
