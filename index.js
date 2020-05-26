@@ -25,6 +25,20 @@ const defaults = {
   validate: false,
 };
 
+/* https://developer.mozilla.org/en-US/docs/Web/CSS/border-style */
+const borderStyles = [
+  "none",
+  "hidden",
+  "dotted",
+  "dashed",
+  "solid",
+  "double",
+  "groove",
+  "ridge",
+  "inset",
+  "outset",
+];
+
 const prefix = "source #";
 const atRulesWithNoSelectors = new Set(["keyframes"]);
 const splitDecls = memoize(str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
@@ -164,26 +178,22 @@ function prepareMappings(mappings, names, opts) {
   const ret = {};
   for (const [key, value] of Object.entries(mappings)) {
     if (key.startsWith("$border: ")) {
-      const oldValue = key.substring("$border: ".length);
-      addMapping(ret, names, `border: ${oldValue}`, `border: ${value}`);
-      addMapping(ret, names, `border-color: ${oldValue}`, `border-color: ${value}`);
-      addMapping(ret, names, `border: solid ${oldValue}`, `border-color: ${value}`);
-      addMapping(ret, names, `border: dashed ${oldValue}`, `border-color: ${value}`);
-      addMapping(ret, names, `border-top-color: ${oldValue}`, `border-top-color: ${value}`);
-      addMapping(ret, names, `border-bottom-color: ${oldValue}`, `border-bottom-color: ${value}`);
-      addMapping(ret, names, `border-left-color: ${oldValue}`, `border-left-color: ${value}`);
-      addMapping(ret, names, `border-right-color: ${oldValue}`, `border-right-color: ${value}`);
-      for (let i = 1; i <= opts.limitSpecial; i++) {
-        addMapping(ret, names, `border: ${i}px solid ${oldValue}`, `border-color: ${value}`);
-        addMapping(ret, names, `border: ${i}px dashed ${oldValue}`, `border-color: ${value}`);
-        addMapping(ret, names, `border-top: ${i}px solid ${oldValue}`, `border-top-color: ${value}`);
-        addMapping(ret, names, `border-top: ${i}px dashed ${oldValue}`, `border-top-color: ${value}`);
-        addMapping(ret, names, `border-bottom: ${i}px solid ${oldValue}`, `border-bottom-color: ${value}`);
-        addMapping(ret, names, `border-bottom: ${i}px dashed ${oldValue}`, `border-bottom-color: ${value}`);
-        addMapping(ret, names, `border-left: ${i}px solid ${oldValue}`, `border-left-color: ${value}`);
-        addMapping(ret, names, `border-left: ${i}px dashed ${oldValue}`, `border-left-color: ${value}`);
-        addMapping(ret, names, `border-right: ${i}px solid ${oldValue}`, `border-right-color: ${value}`);
-        addMapping(ret, names, `border-right: ${i}px dashed ${oldValue}`, `border-right-color: ${value}`);
+      for (const borderStyle of borderStyles) {
+        const oldValue = key.substring("$border: ".length);
+        addMapping(ret, names, `border: ${oldValue}`, `border: ${value}`);
+        addMapping(ret, names, `border: ${borderStyle} ${oldValue}`, `border-color: ${value}`);
+        addMapping(ret, names, `border-color: ${oldValue}`, `border-color: ${value}`);
+        addMapping(ret, names, `border-top-color: ${oldValue}`, `border-top-color: ${value}`);
+        addMapping(ret, names, `border-bottom-color: ${oldValue}`, `border-bottom-color: ${value}`);
+        addMapping(ret, names, `border-left-color: ${oldValue}`, `border-left-color: ${value}`);
+        addMapping(ret, names, `border-right-color: ${oldValue}`, `border-right-color: ${value}`);
+        for (let i = 1; i <= opts.limitSpecial; i++) {
+          addMapping(ret, names, `border: ${i}px ${borderStyle} ${oldValue}`, `border-color: ${value}`);
+          addMapping(ret, names, `border-top: ${i}px ${borderStyle} ${oldValue}`, `border-top-color: ${value}`);
+          addMapping(ret, names, `border-bottom: ${i}px ${borderStyle} ${oldValue}`, `border-bottom-color: ${value}`);
+          addMapping(ret, names, `border-left: ${i}px ${borderStyle} ${oldValue}`, `border-left-color: ${value}`);
+          addMapping(ret, names, `border-right: ${i}px ${borderStyle} ${oldValue}`, `border-right-color: ${value}`);
+        }
       }
     } else if (key.startsWith("$background: ")) {
       const oldValue = key.substring("$background: ".length);
