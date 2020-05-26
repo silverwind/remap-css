@@ -165,6 +165,7 @@ function prepareMappings(mappings, names, opts) {
   for (const [key, value] of Object.entries(mappings)) {
     if (key.startsWith("$border: ")) {
       const oldValue = key.substring("$border: ".length);
+      addMapping(ret, names, `border: ${oldValue}`, `border: ${value}`);
       addMapping(ret, names, `border-color: ${oldValue}`, `border-color: ${value}`);
       addMapping(ret, names, `border: solid ${oldValue}`, `border-color: ${value}`);
       addMapping(ret, names, `border: dashed ${oldValue}`, `border-color: ${value}`);

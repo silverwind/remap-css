@@ -362,3 +362,14 @@ test("sourceNames", makeTest({
   },
   expectedExact: `/* test: "color: red" */\na {\ncolor: blue;\n}`,
 }));
+
+test("$border 0", makeTest({
+  sources: [{css: `a {border: 0;}`}],
+  mappings: {
+    "$border: 0": "0",
+  },
+  expected: `
+    a {
+      border: 0;
+    }
+`}));
