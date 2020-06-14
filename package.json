@@ -22,6 +22,7 @@
     "index.js"
   ],
   "dependencies": {
+    "color-convert": "2.0.1",
     "css-color-names": "1.0.1",
     "css-shorthand-properties": "1.1.1",
     "csstree-validator": "1.5.1",
@@ -33,6 +34,7 @@
     "postcss-merge-rules": "4.0.3",
     "postcss-safe-parser": "4.0.2",
     "postcss-unique-selectors": "4.0.1",
+    "postcss-value-parser": "4.1.0",
     "prettier": "2.0.5",
     "split-string": "6.1.0"
   },

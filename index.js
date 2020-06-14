@@ -1,5 +1,6 @@
 "use strict";
 
+const convert = require("color-convert");
 const cssColorNames = require("css-color-names");
 const csstreeValidator = require("csstree-validator");
 const memoize = require("nano-memoize");
@@ -10,6 +11,7 @@ const postcssDiscardOverridden = require("postcss-discard-overridden");
 const postcssMergeRules = require("postcss-merge-rules");
 const postcssSafeParser = require("postcss-safe-parser");
 const postcssUniqueSelectors = require("postcss-unique-selectors");
+const postcssValueParser = require("postcss-value-parser");
 const prettier = require("prettier");
 const splitString = require("split-string");
 const {isShorthand} = require("css-shorthand-properties");
@@ -104,6 +106,41 @@ const normalizeHexColor = memoize(value => {
   return value;
 });
 
+const alphaToHex = alpha => {
+  if (!alpha === undefined) return "";
+  if (alpha > 1) alpha = 1;
+  if (alpha < 0) alpha = 0;
+  return Math.floor(alpha * 255).toString(16).padStart(2, "0");
+};
+
+const normalizeColor = memoize(value => {
+  if (value in cssColorNames) {
+    value = cssColorNames[value];
+  }
+
+  if (/^#[0-9a-f]{3,8}$/i.test(value)) {
+    value = normalizeHexColor(value);
+    return value;
+  }
+
+  const parsed = postcssValueParser(value);
+  const node = parsed.nodes[0];
+
+  if (node && node.type === "function") {
+    if (["rgb", "rgba"].includes(node.value)) {
+      const [r, g, b, a] = node.nodes.filter(node => node.type === "word").map(node => Number(node.value));
+      value = normalizeHexColor(`#${convert.rgb.hex(r, g, b).toLowerCase()}${alphaToHex(a)}`);
+    } else if (["hsl", "hsla"].includes(node.value)) {
+      let [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => Number(node.value));
+      s = s.replace("%", "");
+      l = l.replace("%", "");
+      value = normalizeHexColor(`#${convert.hsl.hex(h, s, l).toLowerCase()}${alphaToHex(a)}`);
+    }
+  }
+
+  return value;
+});
+
 function normalizeDecl({prop, value, important}) {
   prop = prop.toLowerCase();
 
@@ -115,13 +152,7 @@ function normalizeDecl({prop, value, important}) {
     // normalize 'linear-gradient(-180deg, #0679fc, #0361cc 90%)' to not have whitespace in parens
     .replace(/([a-z-]+\()(.+)(\))/g, (_, m1, m2, m3) => `${m1}${m2.replace(/,\s+/g, ",")}${m3}`);
 
-  if (value in cssColorNames) {
-    value = cssColorNames[value];
-  }
-
-  if (/^#[0-9a-f]+$/i.test(value)) {
-    value = normalizeHexColor(value);
-  }
+  value = normalizeColor(value);
 
   // treat values case-insensitively
   if (prop !== "content" && !value.startsWith("url(")) {
@@ -175,41 +206,47 @@ function addMapping(mappings, names, fromStringDecl, toStringDecl) {
 }
 
 function prepareMappings(mappings, names, opts) {
-  const ret = {};
-  for (const [key, value] of Object.entries(mappings)) {
+  const declMappings = {};
+  const colorMappings = {};
+
+  for (const [key, newValue] of Object.entries(mappings)) {
     if (key.startsWith("$border: ")) {
       for (const borderStyle of borderStyles) {
         const oldValue = key.substring("$border: ".length);
-        addMapping(ret, names, `border: ${oldValue}`, `border: ${value}`);
-        addMapping(ret, names, `border: ${borderStyle} ${oldValue}`, `border-color: ${value}`);
-        addMapping(ret, names, `border-color: ${oldValue}`, `border-color: ${value}`);
-        addMapping(ret, names, `border-top-color: ${oldValue}`, `border-top-color: ${value}`);
-        addMapping(ret, names, `border-bottom-color: ${oldValue}`, `border-bottom-color: ${value}`);
-        addMapping(ret, names, `border-left-color: ${oldValue}`, `border-left-color: ${value}`);
-        addMapping(ret, names, `border-right-color: ${oldValue}`, `border-right-color: ${value}`);
+        addMapping(declMappings, names, `border: ${oldValue}`, `border: ${newValue}`);
+        addMapping(declMappings, names, `border: ${borderStyle} ${oldValue}`, `border-color: ${newValue}`);
+        addMapping(declMappings, names, `border-color: ${oldValue}`, `border-color: ${newValue}`);
+        addMapping(declMappings, names, `border-top-color: ${oldValue}`, `border-top-color: ${newValue}`);
+        addMapping(declMappings, names, `border-bottom-color: ${oldValue}`, `border-bottom-color: ${newValue}`);
+        addMapping(declMappings, names, `border-left-color: ${oldValue}`, `border-left-color: ${newValue}`);
+        addMapping(declMappings, names, `border-right-color: ${oldValue}`, `border-right-color: ${newValue}`);
         for (let i = 1; i <= opts.limitSpecial; i++) {
-          addMapping(ret, names, `border: ${i}px ${borderStyle} ${oldValue}`, `border-color: ${value}`);
-          addMapping(ret, names, `border-top: ${i}px ${borderStyle} ${oldValue}`, `border-top-color: ${value}`);
-          addMapping(ret, names, `border-bottom: ${i}px ${borderStyle} ${oldValue}`, `border-bottom-color: ${value}`);
-          addMapping(ret, names, `border-left: ${i}px ${borderStyle} ${oldValue}`, `border-left-color: ${value}`);
-          addMapping(ret, names, `border-right: ${i}px ${borderStyle} ${oldValue}`, `border-right-color: ${value}`);
+          addMapping(declMappings, names, `border: ${i}px ${borderStyle} ${oldValue}`, `border-color: ${newValue}`);
+          addMapping(declMappings, names, `border-top: ${i}px ${borderStyle} ${oldValue}`, `border-top-color: ${newValue}`);
+          addMapping(declMappings, names, `border-bottom: ${i}px ${borderStyle} ${oldValue}`, `border-bottom-color: ${newValue}`);
+          addMapping(declMappings, names, `border-left: ${i}px ${borderStyle} ${oldValue}`, `border-left-color: ${newValue}`);
+          addMapping(declMappings, names, `border-right: ${i}px ${borderStyle} ${oldValue}`, `border-right-color: ${newValue}`);
         }
       }
     } else if (key.startsWith("$background: ")) {
       const oldValue = key.substring("$background: ".length);
-      addMapping(ret, names, `background: ${oldValue}`, `background: ${value}`);
-      addMapping(ret, names, `background: ${oldValue} none`, `background: ${value}`);
-      addMapping(ret, names, `background: none ${oldValue}`, `background: ${value}`);
-      addMapping(ret, names, `background-color: ${oldValue}`, `background-color: ${value}`);
-      addMapping(ret, names, `background-image: ${oldValue}`, `background-image: ${value}`);
-      addMapping(ret, names, `background-image: ${oldValue} none`, `background-image: ${value}`);
-      addMapping(ret, names, `background-image: none ${oldValue}`, `background-image: ${value}`);
+      addMapping(declMappings, names, `background: ${oldValue}`, `background: ${newValue}`);
+      addMapping(declMappings, names, `background: ${oldValue} none`, `background: ${newValue}`);
+      addMapping(declMappings, names, `background: none ${oldValue}`, `background: ${newValue}`);
+      addMapping(declMappings, names, `background-color: ${oldValue}`, `background-color: ${newValue}`);
+      addMapping(declMappings, names, `background-image: ${oldValue}`, `background-image: ${newValue}`);
+      addMapping(declMappings, names, `background-image: ${oldValue} none`, `background-image: ${newValue}`);
+      addMapping(declMappings, names, `background-image: none ${oldValue}`, `background-image: ${newValue}`);
+    } else if (key.startsWith("$color: ")) {
+      const value = key.substring("$color: ".length);
+      const oldValue = value.startsWith("$") ? value : normalizeColor(value);
+      colorMappings[oldValue] = newValue;
     } else {
-      addMapping(ret, names, key, value);
+      addMapping(declMappings, names, key, newValue);
     }
   }
 
-  return ret;
+  return [declMappings, colorMappings];
 }
 
 function hasDeclarations(root) {
@@ -242,8 +279,70 @@ function makeComment(text) {
   });
 }
 
-const plugin = postcss.plugin("remap-css", (src, preparedMappings, names, index, opts) => {
+function assignNewColor(normalizedColor, newValue) {
+  if (newValue === "$invert") {
+    let [_, r, g, b, a] = /^#(..)(..)(..)(..)$/.exec(normalizedColor);
+    r = (255 - parseInt(r, 16)).toString(16).padStart(2, "0");
+    g = (255 - parseInt(g, 16)).toString(16).padStart(2, "0");
+    b = (255 - parseInt(b, 16)).toString(16).padStart(2, "0");
+    return `#${r}${g}${b}${a}`;
+  } else {
+    return newValue;
+  }
+}
+
+const funcs = new Set(["rgb", "rgba", "hsl", "hsla"]);
+
+function getNewColorValue(normalizedValue, colorMappings) {
+  if (colorMappings[normalizedValue]) {
+    return colorMappings[normalizedValue];
+  } else if (colorMappings.$monochrome) {
+    const [r, g, b] = convert.hex.rgb(normalizedValue);
+    if (r === g && g === b) {
+      return assignNewColor(normalizedValue, colorMappings.$monochrome);
+    }
+  }
+
+  return null; // did not match
+}
+
+function replaceColorsInValue(value, colorMappings) {
+  const {nodes} = postcssValueParser(value);
+  const oldColors = new Set([]);
+  let replaced = false;
+
+  postcssValueParser.walk(nodes, node => {
+    if (node.type === "word" && /#[0-9a-f]{3,8}/i.test(node.value)) {
+      const normalizedValue = normalizeColor(node.value);
+      const newValue = getNewColorValue(normalizedValue, colorMappings);
+      if (newValue) {
+        oldColors.add(node.value);
+        node.value = newValue;
+        replaced = true;
+      }
+    } else if (node.type === "function" && funcs.has(node.value)) {
+      const valueString = postcssValueParser.stringify(node);
+      const normalizedValue = normalizeColor(valueString);
+      const newValue = getNewColorValue(normalizedValue, colorMappings);
+      if (newValue) {
+        oldColors.add(valueString);
+        node.value = newValue;
+        node.type = "word";
+        delete node.nodes;
+        replaced = true;
+      }
+    }
+  });
+
+  return {
+    newValue: replaced ? postcssValueParser.stringify(nodes) : null,
+    oldColors: Array.from(oldColors),
+  };
+}
+
+const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, names, index, opts) => {
   const commentStart = srcName(src, index, opts);
+  const hasColorMappings = Boolean(Object.keys(colorMappings).length);
 
   return async root => {
     root.walkRules(node => {
@@ -252,15 +351,13 @@ const plugin = postcss.plugin("remap-css", (src, preparedMappings, names, index,
       node.walkDecls(decl => {
         const declString = stringifyDecl({prop: decl.prop, value: decl.value, important: decl.important});
         const newDecls = [];
-        if (preparedMappings[declString]) {
-          for (const newDecl of preparedMappings[declString] || []) {
+        if (declMappings[declString]) {
+          for (const newDecl of declMappings[declString] || []) {
             const {prop, value, important, origValue} = newDecl;
             const newProp = prop;
             const newValue = origValue || value;
             const newImportant = Boolean(decl.important || important);
-            if (opts.validate && !isValidDeclaration(newProp, newValue)) {
-              return decl.remove();
-            }
+            if (opts.validate && !isValidDeclaration(newProp, newValue)) return decl.remove();
             newDecls.push(decl.clone({
               prop: newProp,
               value: newValue,
@@ -276,7 +373,13 @@ const plugin = postcss.plugin("remap-css", (src, preparedMappings, names, index,
             node.raws.semicolon = true; // ensure semicolon at the end of the rule
           }
         } else {
-          decl.remove();
+          if (!hasColorMappings) return decl.remove();
+          const {newValue, oldColors} = replaceColorsInValue(decl.value, colorMappings);
+          if (!newValue) return decl.remove();
+          if (opts.validate && !isValidDeclaration(decl.prop, newValue)) return decl.remove();
+          decl.value = newValue;
+          decl.raws._replaced = true;
+          matchedDeclStrings.push(oldColors.map(color => `"${color}"`));
         }
       });
 
@@ -362,11 +465,11 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   opts = Object.assign({}, defaults, opts);
 
   const names = {};
-  const preparedMappings = prepareMappings(mappings, names, opts);
+  const [declMappings, colorMappings] = prepareMappings(mappings, names, opts);
   const postcssOpts = {parser: postcssSafeParser, from: undefined};
 
   const results = await Promise.all(sources.map((src, index) => {
-    const plug = plugin(src, preparedMappings, names, index, {...opts});
+    const plug = plugin(src, declMappings, colorMappings, names, index, {...opts});
     return postcss([plug]).process(src.css, postcssOpts);
   }));
 

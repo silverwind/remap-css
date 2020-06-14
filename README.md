@@ -42,6 +42,7 @@ There are special mapping keys supported to reduce the need for similar `border`
 
 - `$border: value`: Variations of border-colors
 - `$background: value` Variations of background-colors
+- `$color`: Any occurance of given color
 
 On special rules, only specify the replacement value alone (not the declaration).
 

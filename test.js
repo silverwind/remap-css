@@ -373,3 +373,78 @@ test("$border 0", makeTest({
       border: 0;
     }
 `}));
+
+test("$color in gradient hex", makeTest({
+  sources: [{css: `
+    a:hover {
+      background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
+    }
+  `}],
+  mappings: {
+    "$color: #1074e7": "#123",
+  },
+  expected: `
+  a:hover {
+    background: linear-gradient(to bottom, #123, rgb(255, 255, 255, 0));
+  }
+`}));
+
+test("$color in gradient rgb", makeTest({
+  sources: [{css: `
+    a:hover {
+      background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
+    }
+  `}],
+  mappings: {
+    "$color: rgb(255,255,255,0)": "#123",
+  },
+  expected: `
+  a:hover {
+    background: linear-gradient(to bottom, #1074e7, #123);
+  }
+`}));
+
+test("$color in gradient rgb", makeTest({
+  sources: [{css: `
+    a:hover {
+      background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
+    }
+  `}],
+  mappings: {
+    "$color: rgb(255,255,255,0)": "#123",
+  },
+  expected: `
+  a:hover {
+    background: linear-gradient(to bottom, #1074e7, #123);
+  }
+`}));
+
+test("$color: $monochrome", makeTest({
+  sources: [{css: `
+    a:hover {
+      background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
+    }
+  `}],
+  mappings: {
+    "$color: $monochrome": "#123",
+  },
+  expected: `
+  a:hover {
+    background: linear-gradient(to bottom, #1074e7, #123);
+  }
+`}));
+
+test("$color: $monochrome - $invert", makeTest({
+  sources: [{css: `
+    a:hover {
+      background: linear-gradient(to bottom, #1074e7, rgb(40,40,40,0))
+    }
+  `}],
+  mappings: {
+    "$color: $monochrome": "$invert",
+  },
+  expected: `
+  a:hover {
+    background: linear-gradient(to bottom, #1074e7, #d7d7d700);
+  }
+`}));
