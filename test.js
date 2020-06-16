@@ -444,7 +444,23 @@ test("$color: $monochrome - $invert", makeTest({
     "$color: $monochrome": "$invert",
   },
   expected: `
-  a:hover {
-    background: linear-gradient(to bottom, #1074e7, #d7d7d700);
-  }
+    a:hover {
+      background: linear-gradient(to bottom, #1074e7, #d7d7d700);
+    }
+`}));
+
+test("currentcolor", makeTest({
+  sources: [{css: `
+    a {
+      border-color: currentColor !important;
+      border-top: 1px solid !important;
+    }
+  `}],
+  mappings: {
+    "$border: currentcolor": "currentcolor",
+  },
+  expected: `
+    a {
+      border-color: currentcolor !important;
+    }
 `}));
