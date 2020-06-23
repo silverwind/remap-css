@@ -131,9 +131,10 @@ const normalizeColor = memoize(value => {
       const [r, g, b, a] = node.nodes.filter(node => node.type === "word").map(node => Number(node.value));
       value = normalizeHexColor(`#${convert.rgb.hex(r, g, b).toLowerCase()}${alphaToHex(a)}`);
     } else if (["hsl", "hsla"].includes(node.value)) {
-      let [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => Number(node.value));
-      s = s.replace("%", "");
-      l = l.replace("%", "");
+      let [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => String(node.value));
+      h = Number(h);
+      s = Number(s.replace("%", ""));
+      l = Number(l.replace("%", ""));
       value = normalizeHexColor(`#${convert.hsl.hex(h, s, l).toLowerCase()}${alphaToHex(a)}`);
     }
   }

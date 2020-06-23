@@ -419,6 +419,21 @@ test("$color in gradient rgb", makeTest({
   }
 `}));
 
+test("$color hsla", makeTest({
+  sources: [{css: `
+    a:hover {
+      background: linear-gradient(to bottom, hsla(0,0%,100%,.125), rgb(255,255,255,0))
+    }
+  `}],
+  mappings: {
+    "$color: hsla(0,0%,100%,.125)": "#123",
+  },
+  expected: `
+  a:hover {
+    background: linear-gradient(to bottom, #123, rgb(255, 255, 255, 0));
+  }
+`}));
+
 test("$color: $monochrome", makeTest({
   sources: [{css: `
     a:hover {
