@@ -320,7 +320,7 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, backgr
     if (node.type === "word" && isColor(node.value)) {
       const normalizedValue = normalizeColor(node.value);
 
-      if (prop.startsWith("border")) {
+      if (prop.startsWith("border") && !prop.includes("radius")) {
         const newValue = getNewColorValue(normalizedValue, borderMappings);
         if (newValue) return doReplace(node, newValue);
       }
