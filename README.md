@@ -37,13 +37,13 @@ Returns a `Promise` that resolves to a CSS string.
   - `stylistic`: *boolean* Whether to perform stylistic tweaks on selectors. Default: `false`.
   - `validate`: *boolean* Validate CSS property values and ignore declarations that fail it. Default: `false`.
 
-There are special mapping keys supported to reduce the need for similar `border` and `background` rules:
+These special mapping keys supported:
 
-- `$border: value`: Variations of border-colors
-- `$background: value` Variations of background-colors
-- `$color`: Any occurance of given color
+- `$border: value`: Any occurance of `value` in a `border` rule
+- `$background: value` Any occurance of `value` in a `background` rule
+- `$color: value`: Any occurance of `value`
 
-On special rules, only specify the replacement value alone (not the declaration).
+On special rules, only specify the replacement value alone (not the whole declaration).
 
 ## Related
 
