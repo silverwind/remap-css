@@ -509,7 +509,7 @@ test("multivalue 2", makeTest({
     }
 `}));
 
-test("border", makeTest({
+test("border rgba", makeTest({
   sources: [{css: `
     a {
       border-color: rgba(27,31,35,.15);
@@ -521,5 +521,20 @@ test("border", makeTest({
   expected: `
     a {
       border-color: #222;
+    }
+`}));
+
+test("border 0", makeTest({
+  sources: [{css: `
+    a {
+      border: 0;
+    }
+  `}],
+  mappings: {
+    "$border: 0": "0",
+  },
+  expected: `
+    a {
+      border: 0;
     }
 `}));

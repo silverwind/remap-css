@@ -99,6 +99,7 @@ const alphaToHex = alpha => {
 };
 
 const cssSpecialValues = new Set([
+  "0",
   "currentcolor",
   "inherit",
   "initial",
