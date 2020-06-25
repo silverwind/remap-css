@@ -318,6 +318,7 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, backgr
   postcssValueParser.walk(nodes, node => {
     if (node.type === "word" && isColor(node.value)) {
       const normalizedValue = normalizeColor(node.value);
+
       if (prop.startsWith("border")) {
         const newValue = getNewColorValue(normalizedValue, borderMappings);
         if (newValue) return doReplace(node, newValue);
@@ -331,6 +332,23 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, backgr
     } else if (node.type === "function" && funcs.has(node.value)) {
       const valueString = postcssValueParser.stringify(node);
       const normalizedValue = normalizeColor(valueString);
+
+      if (prop.startsWith("border")) {
+        const newValue = getNewColorValue(normalizedValue, borderMappings);
+        if (newValue) {
+          doReplace(node, newValue);
+          node.type = "word";
+          delete node.nodes;
+        }
+      }
+      if (prop.startsWith("background")) {
+        const newValue = getNewColorValue(normalizedValue, backgroundMappings);
+        if (newValue) {
+          doReplace(node, newValue);
+          node.type = "word";
+          delete node.nodes;
+        }
+      }
       const newValue = getNewColorValue(normalizedValue, colorMappings);
       if (newValue) {
         doReplace(node, newValue);
