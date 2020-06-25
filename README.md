@@ -33,7 +33,6 @@ Returns a `Promise` that resolves to a CSS string.
   - `indentCss`: *number* Numbers of spaces to indent the output CSS. Default: `0`.
   - `lineLength`: *number* Number of characters after which to wrap lines. Default: `80`.
   - `ignoreSelectors`: *Array* of *RegExp* Regular expressions of selectors to ignore. Default: `[]`.
-  - `limitSpecial`: *number* Maximum amount of iteration per special mappings. Default: `25`.
   - `comments`: *boolean* Whether to output comments. Default: `false`.
   - `stylistic`: *boolean* Whether to perform stylistic tweaks on selectors. Default: `false`.
   - `validate`: *boolean* Validate CSS property values and ignore declarations that fail it. Default: `false`.

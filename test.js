@@ -190,7 +190,7 @@ test("special mapping name", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* source #0: "background: red" */\na {\nbackground: blue;\n}`,
+  expectedExact: `/* source #0: "red" */\na {\nbackground: blue;\n}`,
 }));
 
 test("ignore atrules", makeTest({
@@ -209,7 +209,7 @@ test("ignore atrules", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* source #0: "background: red" */\na {\nbackground: blue;\n}`,
+  expectedExact: `/* source #0: "red" */\na {\nbackground: blue;\n}`,
 }));
 
 test("atrules", makeTest({
@@ -249,7 +249,7 @@ test("atrules comments", makeTest({
   opts: {
     comments: true,
   },
-  expectedExact: `/* source #0: "background: red", "background: green" */\n@media screen {\n  a {\n    background: blue;\n  }\n  b {\n    background: yellow;\n  }\n}`,
+  expectedExact: `/* source #0: "red", "green" */\n@media screen {\n  a {\n    background: blue;\n  }\n  b {\n    background: yellow;\n  }\n}`,
 }));
 
 test("keyframe atrule, no prefix", makeTest({
@@ -368,11 +368,7 @@ test("$border 0", makeTest({
   mappings: {
     "$border: 0": "0",
   },
-  expected: `
-    a {
-      border: 0;
-    }
-`}));
+  expected: ``}));
 
 test("$color in gradient hex", makeTest({
   sources: [{css: `
@@ -477,5 +473,38 @@ test("currentcolor", makeTest({
   expected: `
     a {
       border-color: currentcolor !important;
+    }
+`}));
+
+test("multivalue", makeTest({
+  sources: [{css: `
+    a {
+      border-color: red red green;
+    }
+  `}],
+  mappings: {
+    "$color: red": "blue",
+    "$color: green": "yellow",
+  },
+  expected: `
+    a {
+      border-color: blue blue yellow;
+    }
+`}));
+
+test("multivalue 2", makeTest({
+  sources: [{css: `
+    a {
+      border-color: #eee #eee #fff red;
+    }
+  `}],
+  mappings: {
+    "$border: #fff": "#222",
+    "$border: #eee": "#333",
+    "$color: red": "#444",
+  },
+  expected: `
+    a {
+      border-color: #333 #333 #222 #444;
     }
 `}));
