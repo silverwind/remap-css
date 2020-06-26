@@ -290,8 +290,6 @@ function assignNewColor(normalizedColor, newValue) {
   }
 }
 
-const funcs = new Set(["rgb", "rgba", "hsl", "hsla"]);
-
 function getNewColorValue(normalizedValue, colorMappings) {
   if (colorMappings[normalizedValue]) {
     return colorMappings[normalizedValue];
@@ -330,11 +328,11 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, backgr
       }
       const newValue = getNewColorValue(normalizedValue, colorMappings);
       if (newValue) return doReplace(node, newValue);
-    } else if (node.type === "function" && funcs.has(node.value)) {
+    } else if (node.type === "function") {
       const valueString = postcssValueParser.stringify(node);
       const normalizedValue = normalizeColor(valueString);
 
-      if (prop.startsWith("border")) {
+      if (prop.startsWith("border") && !prop.includes("radius")) {
         const newValue = getNewColorValue(normalizedValue, borderMappings);
         if (newValue) {
           doReplace(node, newValue);

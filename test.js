@@ -538,3 +538,18 @@ test("border 0", makeTest({
       border: 0;
     }
 `}));
+
+test("gradient", makeTest({
+  sources: [{css: `
+    a {
+      background-image: linear-gradient(#54a3ff,#006eed);
+    }
+  `}],
+  mappings: {
+    "$background: linear-gradient(#54a3ff,#006eed)": "linear-gradient(#111,#111)",
+  },
+  expected: `
+    a {
+      background-image: linear-gradient(#111, #111);
+    }
+`}));
