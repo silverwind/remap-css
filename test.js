@@ -553,3 +553,18 @@ test("gradient", makeTest({
       background-image: linear-gradient(#111, #111);
     }
 `}));
+
+test("gradient hsla", makeTest({
+  sources: [{css: `
+    a {
+      background-image: linear-gradient(hsla(0,10%,10%,.5),#222);
+    }
+  `}],
+  mappings: {
+    "$color: hsla(0,10%,10%,.5)": "#111",
+  },
+  expected: `
+    a {
+      background-image: linear-gradient(#111, #222);
+    }
+`}));

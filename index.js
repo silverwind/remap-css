@@ -109,15 +109,15 @@ const cssSpecialValues = new Set([
 
 const isColor = memoize(value => {
   value = value.toLowerCase();
+  if (cssColorNames[value]) return true;
+  if (cssSpecialValues.has(value)) return true;
   if (/^#[0-9a-f]{3,4}$/.test(value)) return true;
   if (/^#[0-9a-f]{6}$/.test(value)) return true;
   if (/^#[0-9a-f]{8}$/.test(value)) return true;
-  if (cssColorNames[value]) return true;
-  if (cssSpecialValues.has(value)) return true;
   if (/^rgb\([0-9]+\s*,\s*[0-9]+\s*,\s*[0-9]\)/.test(value)) return true;
   if (/^rgba\([0-9]+\s*,\s*[0-9]+\s*,\s*[0-9]\s*,\s*[0-9.]+\)/.test(value)) return true;
-  if (/^rgb\([0-9]+\s*,\s*[0-9]%+\s*,\s*[0-9]%\)/.test(value)) return true;
-  if (/^rgba\([0-9]+\s*,\s*[0-9]%+\s*,\s*[0-9]%\s*,\s*[0-9.]+\)/.test(value)) return true;
+  if (/^hsl\([0-9]+\s*,\s*[0-9]%+\s*,\s*[0-9]%\)/.test(value)) return true;
+  if (/^hsla\([0-9]+\s*,\s*[0-9]%+\s*,\s*[0-9]%\s*,\s*[0-9.]+\)/.test(value)) return true;
   return false;
 });
 
