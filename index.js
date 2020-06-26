@@ -303,58 +303,43 @@ function getNewColorValue(normalizedValue, colorMappings) {
   return null; // did not match
 }
 
+function doReplace(node, oldColors, newValue) {
+  oldColors.add(node.type === "word" ? node.value : postcssValueParser.stringify([node]));
+  node.value = newValue;
+  node.type = "word";
+  delete node.nodes;
+  return true;
+}
+
+function checkNode(node, prop, normalizedValue, oldColors, colorMappings, borderMappings, backgroundMappings) {
+  if (prop.startsWith("border") && !prop.includes("radius")) {
+    const newValue = getNewColorValue(normalizedValue, borderMappings);
+    if (newValue) return doReplace(node, oldColors, newValue);
+  }
+  if (prop.startsWith("background")) {
+    const newValue = getNewColorValue(normalizedValue, backgroundMappings);
+    if (newValue) return doReplace(node, oldColors, newValue);
+  }
+  const newValue = getNewColorValue(normalizedValue, colorMappings);
+  if (newValue) return doReplace(node, oldColors, newValue);
+}
+
 function replaceColorsInValue(prop, value, colorMappings, borderMappings, backgroundMappings) {
   const {nodes} = postcssValueParser(value);
   const oldColors = new Set([]);
   let replaced = false;
 
-  function doReplace(node, newValue) {
-    oldColors.add(node.type === "word" ? node.value : postcssValueParser.stringify([node]));
-    node.value = newValue;
-    replaced = true;
-  }
-
   postcssValueParser.walk(nodes, node => {
+    let normalizedValue;
     if (node.type === "word" && isColor(node.value)) {
-      const normalizedValue = normalizeColor(node.value);
-
-      if (prop.startsWith("border") && !prop.includes("radius")) {
-        const newValue = getNewColorValue(normalizedValue, borderMappings);
-        if (newValue) return doReplace(node, newValue);
-      }
-      if (prop.startsWith("background")) {
-        const newValue = getNewColorValue(normalizedValue, backgroundMappings);
-        if (newValue) return doReplace(node, newValue);
-      }
-      const newValue = getNewColorValue(normalizedValue, colorMappings);
-      if (newValue) return doReplace(node, newValue);
+      normalizedValue = normalizeColor(node.value);
     } else if (node.type === "function") {
       const valueString = postcssValueParser.stringify(node);
-      const normalizedValue = normalizeColor(valueString);
-
-      if (prop.startsWith("border") && !prop.includes("radius")) {
-        const newValue = getNewColorValue(normalizedValue, borderMappings);
-        if (newValue) {
-          doReplace(node, newValue);
-          node.type = "word";
-          delete node.nodes;
-        }
-      }
-      if (prop.startsWith("background")) {
-        const newValue = getNewColorValue(normalizedValue, backgroundMappings);
-        if (newValue) {
-          doReplace(node, newValue);
-          node.type = "word";
-          delete node.nodes;
-        }
-      }
-      const newValue = getNewColorValue(normalizedValue, colorMappings);
-      if (newValue) {
-        doReplace(node, newValue);
-        node.type = "word";
-        delete node.nodes;
-      }
+      normalizedValue = normalizeColor(valueString);
     }
+    if (!normalizedValue) return;
+    const success = checkNode(node, prop, normalizedValue, oldColors, colorMappings, borderMappings, backgroundMappings);
+    if (success) replaced = true;
   });
 
   return {
