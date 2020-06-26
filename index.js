@@ -309,7 +309,7 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, backgr
   let replaced = false;
 
   function doReplace(node, newValue) {
-    oldColors.add(node.value);
+    oldColors.add(node.type === "word" ? node.value : postcssValueParser.stringify([node]));
     node.value = newValue;
     replaced = true;
   }
