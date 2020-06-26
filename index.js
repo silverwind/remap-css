@@ -3,7 +3,7 @@
 const convert = require("color-convert");
 const cssColorNames = require("css-color-names");
 const csstreeValidator = require("csstree-validator");
-const memoize = require("nano-memoize");
+const memo = require("nano-memoize");
 const postcss = require("postcss");
 const postcssDiscardDuplicates = require("postcss-discard-duplicates");
 const postcssDiscardEmpty = require("postcss-discard-empty");
@@ -28,8 +28,8 @@ const defaults = {
 
 const prefix = "source #";
 const atRulesWithNoSelectors = new Set(["keyframes"]);
-const splitDecls = memoize(str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
-const splitSelectors = memoize(str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
+const splitDecls = memo(str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
+const splitSelectors = memo(str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
 const joinSelectors = selectors => selectors.join(", ");
 const uniq = arr => Array.from(new Set(arr));
 
@@ -81,7 +81,7 @@ function rewriteSelectors(selectors, opts, src) {
   return ret;
 }
 
-const normalizeHexColor = memoize(value => {
+const normalizeHexColor = memo(value => {
   if ([4, 5].includes(value.length)) {
     const [h, r, g, b, a] = value;
     return `${h}${r}${r}${g}${g}${b}${b}${a || "f"}${a || "f"}`;
@@ -91,12 +91,12 @@ const normalizeHexColor = memoize(value => {
   return value;
 });
 
-const alphaToHex = alpha => {
+const alphaToHex = memo(alpha => {
   if (!alpha === undefined) return "";
   if (alpha > 1) alpha = 1;
   if (alpha < 0) alpha = 0;
   return Math.floor(alpha * 255).toString(16).padStart(2, "0");
-};
+});
 
 const cssSpecialValues = new Set([
   "0",
@@ -107,7 +107,7 @@ const cssSpecialValues = new Set([
   "transparent",
 ]);
 
-const isColor = memoize(value => {
+const isColor = memo(value => {
   value = value.toLowerCase();
   if (cssColorNames[value]) return true;
   if (cssSpecialValues.has(value)) return true;
@@ -121,7 +121,7 @@ const isColor = memoize(value => {
   return false;
 });
 
-const normalizeColor = memoize(value => {
+const normalizeColor = memo(value => {
   value = value.toLowerCase();
 
   if (value in cssColorNames) {
@@ -185,7 +185,7 @@ function normalizeDecl({prop, value, important}) {
 }
 
 // returns an array of declarations
-const parseDecl = memoize((declString) => {
+const parseDecl = memo((declString) => {
   declString = declString.trim().replace(/;+$/, "").trim();
 
   const ret = [];
@@ -258,7 +258,7 @@ function hasDeclarations(root) {
   return false;
 }
 
-const isValidDeclaration = memoize((prop, value) => {
+const isValidDeclaration = memo((prop, value) => {
   try {
     value = value.replace(/\/\*\[\[.+?\]\]\*\//g, "var(--name)");
     const rule = `a{${prop}: ${value}}`;
@@ -278,7 +278,7 @@ function makeComment(text) {
   });
 }
 
-function assignNewColor(normalizedColor, newValue) {
+const assignNewColor = memo((normalizedColor, newValue) => {
   if (newValue === "$invert") {
     let [_, r, g, b, a] = /^#(..)(..)(..)(..)$/.exec(normalizedColor);
     r = (255 - parseInt(r, 16)).toString(16).padStart(2, "0");
@@ -288,7 +288,7 @@ function assignNewColor(normalizedColor, newValue) {
   } else {
     return newValue;
   }
-}
+});
 
 function getNewColorValue(normalizedValue, colorMappings) {
   if (colorMappings[normalizedValue]) {
