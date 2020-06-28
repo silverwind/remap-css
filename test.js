@@ -568,3 +568,18 @@ test("gradient hsla", makeTest({
       background-image: linear-gradient(#111, #222);
     }
 `}));
+
+test("$box-shadow", makeTest({
+  sources: [{css: `
+    a {
+      box-shadow: 0 0 1px linear-gradient(hsla(0,10%,10%,.5),#222);
+    }
+  `}],
+  mappings: {
+    "$box-shadow: hsla(0,10%,10%,.5)": "#111",
+  },
+  expected: `
+    a {
+      box-shadow: 0 0 1px linear-gradient(#111, #222);
+    }
+`}));

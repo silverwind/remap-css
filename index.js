@@ -225,6 +225,7 @@ function prepareMappings(mappings, names) {
   const declMappings = {};
   const colorMappings = {};
   const borderMappings = {};
+  const boxShadowMappings = {};
   const backgroundMappings = {};
 
   for (const [key, newValue] of Object.entries(mappings)) {
@@ -236,6 +237,10 @@ function prepareMappings(mappings, names) {
       const value = key.substring("$background: ".length);
       const oldValue = (value.startsWith("$") ? value : normalizeColor(value)).toLowerCase();
       backgroundMappings[oldValue] = newValue;
+    } else if (key.startsWith("$box-shadow: ")) {
+      const value = key.substring("$box-shadow: ".length);
+      const oldValue = (value.startsWith("$") ? value : normalizeColor(value)).toLowerCase();
+      boxShadowMappings[oldValue] = newValue;
     } else if (key.startsWith("$color: ")) {
       const value = key.substring("$color: ".length);
       const oldValue = (value.startsWith("$") ? value : normalizeColor(value)).toLowerCase();
@@ -245,7 +250,7 @@ function prepareMappings(mappings, names) {
     }
   }
 
-  return [declMappings, colorMappings, borderMappings, backgroundMappings];
+  return [declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings];
 }
 
 function hasDeclarations(root) {
@@ -311,7 +316,7 @@ function doReplace(node, oldColors, newValue) {
   return true;
 }
 
-function checkNode(node, prop, normalizedValue, oldColors, colorMappings, borderMappings, backgroundMappings) {
+function checkNode(node, prop, normalizedValue, oldColors, colorMappings, borderMappings, boxShadowMappings, backgroundMappings) {
   if (prop.startsWith("border") && !prop.includes("radius")) {
     const newValue = getNewColorValue(normalizedValue, borderMappings);
     if (newValue) return doReplace(node, oldColors, newValue);
@@ -320,11 +325,15 @@ function checkNode(node, prop, normalizedValue, oldColors, colorMappings, border
     const newValue = getNewColorValue(normalizedValue, backgroundMappings);
     if (newValue) return doReplace(node, oldColors, newValue);
   }
+  if (prop === "box-shadow") {
+    const newValue = getNewColorValue(normalizedValue, boxShadowMappings);
+    if (newValue) return doReplace(node, oldColors, newValue);
+  }
   const newValue = getNewColorValue(normalizedValue, colorMappings);
   if (newValue) return doReplace(node, oldColors, newValue);
 }
 
-function replaceColorsInValue(prop, value, colorMappings, borderMappings, backgroundMappings) {
+function replaceColorsInValue(prop, value, colorMappings, borderMappings, boxShadowMappings, backgroundMappings) {
   const {nodes} = postcssValueParser(value);
   const oldColors = new Set([]);
   let replaced = false;
@@ -338,7 +347,7 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, backgr
       normalizedValue = normalizeColor(valueString);
     }
     if (!normalizedValue) return;
-    const success = checkNode(node, prop, normalizedValue, oldColors, colorMappings, borderMappings, backgroundMappings);
+    const success = checkNode(node, prop, normalizedValue, oldColors, colorMappings, borderMappings, boxShadowMappings, backgroundMappings);
     if (success) replaced = true;
   });
 
@@ -348,7 +357,7 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, backgr
   };
 }
 
-const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, borderMappings, backgroundMappings, names, index, opts) => {
+const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings, names, index, opts) => {
   const commentStart = srcName(src, index, opts);
 
   return async root => {
@@ -380,7 +389,7 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
             node.raws.semicolon = true; // ensure semicolon at the end of the rule
           }
         } else {
-          const {newValue, oldColors} = replaceColorsInValue(decl.prop, decl.value, colorMappings, borderMappings, backgroundMappings);
+          const {newValue, oldColors} = replaceColorsInValue(decl.prop, decl.value, colorMappings, borderMappings, boxShadowMappings, backgroundMappings);
           if (!newValue) return decl.remove();
           if (opts.validate && !isValidDeclaration(decl.prop, newValue)) return decl.remove();
           decl.value = newValue;
@@ -471,11 +480,11 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   opts = Object.assign({}, defaults, opts);
 
   const names = {};
-  const [declMappings, colorMappings, borderMappings, backgroundMappings] = prepareMappings(mappings, names);
+  const [declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings] = prepareMappings(mappings, names);
   const postcssOpts = {parser: postcssSafeParser, from: undefined};
 
   const results = await Promise.all(sources.map((src, index) => {
-    const plug = plugin(src, declMappings, colorMappings, borderMappings, backgroundMappings, names, index, {...opts});
+    const plug = plugin(src, declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings, names, index, {...opts});
     return postcss([plug]).process(src.css, postcssOpts);
   }));
 

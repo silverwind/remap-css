@@ -41,6 +41,7 @@ These special mapping keys supported:
 
 - `$border: value`: Any occurance of `value` in a `border` rule
 - `$background: value` Any occurance of `value` in a `background` rule
+- `$box-shadow: value` Any occurance of `value` in a `box-shadow` rule
 - `$color: value`: Any occurance of `value`
 
 On special rules, only specify the replacement value alone (not the whole declaration).
