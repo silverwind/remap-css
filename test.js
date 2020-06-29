@@ -638,3 +638,22 @@ test("border 3", makeTest({
       }
     }
 `}));
+
+test("border 4", makeTest({
+  sources: [{css: `
+    @media (min-width:544px) {
+      a {
+        border-color: red;
+      }
+    }
+  `}],
+  mappings: {
+    "$color: red": "yellow",
+  },
+  expected: `
+    @media (min-width: 544px) {
+      a {
+        border-color: yellow;
+      }
+    }
+`}));

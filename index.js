@@ -414,7 +414,7 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
           if (!newValue) return decl.remove();
           if (opts.validate && !isValidDeclaration(decl.prop, newValue)) return decl.remove();
 
-          if (borderColorShorthands.has(decl.prop)) { // expand border shorthand
+          if (borderColorShorthands.has(decl.prop) && decl.prop !== "border-color") { // expand border shorthand
             const expanded = expandShorthandProperty(decl.prop, newValue);
             let numReplaced = 0;
             for (const [prop, value] of Object.entries(expanded)) {
