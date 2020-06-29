@@ -587,3 +587,54 @@ test("border-bottom-color", makeTest({
 
     }
 `}));
+
+test("border 2", makeTest({
+  sources: [{css: `
+    a {
+      font-size: 12px;
+      border: 1px solid red;
+      border-radius: 6px;
+    }
+  `}],
+  mappings: {
+    "$border: red": "yellow",
+  },
+  expected: `
+    a {
+      border-color: yellow;
+    }
+`}));
+
+test("border 2", makeTest({
+  sources: [{css: `
+    a {
+      border:1px solid red;
+    }
+  `}],
+  mappings: {
+    "$color: red": "yellow",
+  },
+  expected: `
+    a {
+      border-color: yellow;
+    }
+`}));
+
+test("border 3", makeTest({
+  sources: [{css: `
+    @media (min-width:544px) {
+      a {
+        border:1px solid red;
+      }
+    }
+  `}],
+  mappings: {
+    "$color: red": "yellow",
+  },
+  expected: `
+    @media (min-width: 544px) {
+      a {
+        border-color: yellow;
+      }
+    }
+`}));

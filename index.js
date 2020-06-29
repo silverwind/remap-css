@@ -410,16 +410,23 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
           }
         } else {
           const {newValue, oldColors} = replaceColorsInValue(decl.prop, decl.value, colorMappings, borderMappings, boxShadowMappings, backgroundMappings);
+
           if (!newValue) return decl.remove();
           if (opts.validate && !isValidDeclaration(decl.prop, newValue)) return decl.remove();
 
           if (borderColorShorthands.has(decl.prop)) { // expand border shorthand
             const expanded = expandShorthandProperty(decl.prop, newValue);
+            let numReplaced = 0;
             for (const [prop, value] of Object.entries(expanded)) {
               if (!prop.includes("color")) continue;
-              decl.cloneBefore({prop, value});
+              if (numReplaced === 0) {
+                decl.prop = prop;
+                decl.value = value;
+              } else {
+                decl.cloneBefore({prop, value});
+              }
+              numReplaced += 1;
             }
-            decl.remove();
           } else { // simple replace
             decl.value = newValue;
           }
