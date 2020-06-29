@@ -67,6 +67,11 @@ function rewriteSelectors(selectors, opts, src) {
         }
       }
 
+      // ignore keyframes steps
+      if (/^[0-9]+%$/.test(selector)) {
+        skip = true;
+      }
+
       if (!skip) {
         // incomplete check to avoid generating invalid "html :root" selectors
         if (selector.startsWith(":root ") && src.prefix.startsWith("html")) {
