@@ -12,8 +12,10 @@ const postcssMergeRules = require("postcss-merge-rules");
 const postcssSafeParser = require("postcss-safe-parser");
 const postcssUniqueSelectors = require("postcss-unique-selectors");
 const postcssValueParser = require("postcss-value-parser");
+const postcssMergeLonghand = require("postcss-merge-longhand");
 const prettier = require("prettier");
 const splitString = require("split-string");
+const {expandShorthandProperty} = require("css-property-parser");
 const {isShorthand} = require("css-shorthand-properties");
 
 const defaults = {
@@ -316,8 +318,26 @@ function doReplace(node, oldColors, newValue) {
   return true;
 }
 
+const borderColorShorthands = new Set([
+  "border",
+  "border-top",
+  "border-left",
+  "border-right",
+  "border-bottom",
+  "border-color",
+]);
+
+const borderColorLonghands = new Set([
+  "border-top-color",
+  "border-left-color",
+  "border-right-color",
+  "border-bottom-color",
+]);
+
+const borderColorVars = new Set([...borderColorShorthands, ...borderColorLonghands]);
+
 function checkNode(node, prop, normalizedValue, oldColors, colorMappings, borderMappings, boxShadowMappings, backgroundMappings) {
-  if (prop.startsWith("border") && !prop.includes("radius")) {
+  if (borderColorVars.has(prop)) {
     const newValue = getNewColorValue(normalizedValue, borderMappings);
     if (newValue) return doReplace(node, oldColors, newValue);
   }
@@ -392,7 +412,18 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
           const {newValue, oldColors} = replaceColorsInValue(decl.prop, decl.value, colorMappings, borderMappings, boxShadowMappings, backgroundMappings);
           if (!newValue) return decl.remove();
           if (opts.validate && !isValidDeclaration(decl.prop, newValue)) return decl.remove();
-          decl.value = newValue;
+
+          if (borderColorShorthands.has(decl.prop)) { // expand border shorthand
+            const expanded = expandShorthandProperty(decl.prop, newValue);
+            for (const [prop, value] of Object.entries(expanded)) {
+              if (!prop.includes("color")) continue;
+              decl.cloneBefore({prop, value});
+            }
+            decl.remove();
+          } else { // simple replace
+            decl.value = newValue;
+          }
+
           decl.raws._replaced = true;
           matchedDeclStrings.push(oldColors.map(color => `"${color}"`));
         }
@@ -501,6 +532,7 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
     postcssDiscardOverridden,
     postcssMergeRules,
     postcssUniqueSelectors,
+    postcssMergeLonghand,
   ];
   output = (await postcss(plugins).process(output, postcssOpts)).css;
 

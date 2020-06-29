@@ -24,6 +24,7 @@
   "dependencies": {
     "color-convert": "2.0.1",
     "css-color-names": "1.0.1",
+    "css-property-parser": "1.0.6",
     "css-shorthand-properties": "1.1.1",
     "csstree-validator": "1.5.1",
     "nano-memoize": "1.2.0",
@@ -31,6 +32,7 @@
     "postcss-discard-duplicates": "4.0.2",
     "postcss-discard-empty": "4.0.1",
     "postcss-discard-overridden": "4.0.1",
+    "postcss-merge-longhand": "4.0.11",
     "postcss-merge-rules": "4.0.3",
     "postcss-safe-parser": "4.0.2",
     "postcss-unique-selectors": "4.0.1",

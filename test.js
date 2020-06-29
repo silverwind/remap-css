@@ -101,7 +101,7 @@ test("duplicate rules", makeTest({
 
 test("special rule", makeTest({
   sources: [{css: `
-    a {border-left-color: red;}
+    a {border-left: 1px solid red;}
   `}],
   mappings: {
     "$border: red": "blue",
@@ -524,21 +524,6 @@ test("border rgba", makeTest({
     }
 `}));
 
-test("border 0", makeTest({
-  sources: [{css: `
-    a {
-      border: 0;
-    }
-  `}],
-  mappings: {
-    "$border: 0": "0",
-  },
-  expected: `
-    a {
-      border: 0;
-    }
-`}));
-
 test("gradient", makeTest({
   sources: [{css: `
     a {
@@ -581,5 +566,24 @@ test("$box-shadow", makeTest({
   expected: `
     a {
       box-shadow: 0 0 1px linear-gradient(#111, #222);
+    }
+`}));
+
+test("border-bottom-color", makeTest({
+  sources: [{css: `
+    a {
+      border-bottom-color: blue;
+      border-top: 1px solid green;
+    }
+  `}],
+  mappings: {
+    "$border: blue": "red",
+    "$border: green": "yellow",
+  },
+  expected: `
+    a {
+      border-bottom-color: red;
+      border-top-color: yellow;
+
     }
 `}));
