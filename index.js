@@ -105,19 +105,20 @@ const alphaToHex = memo(alpha => {
   return Math.floor(alpha * 255).toString(16).padStart(2, "0");
 });
 
-const cssSpecialValues = new Set([
-  "0",
+const cssValueKeywords = new Set([
   "currentcolor",
   "inherit",
   "initial",
   "none",
+  "revert",
   "transparent",
+  "unset",
 ]);
 
 const isColor = memo(value => {
   value = value.toLowerCase();
   if (cssColorNames[value]) return true;
-  if (cssSpecialValues.has(value)) return true;
+  if (cssValueKeywords.has(value)) return true;
   if (/^#[0-9a-f]{3,4}$/.test(value)) return true;
   if (/^#[0-9a-f]{6}$/.test(value)) return true;
   if (/^#[0-9a-f]{8}$/.test(value)) return true;
