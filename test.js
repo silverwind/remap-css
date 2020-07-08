@@ -705,3 +705,23 @@ test("precedence 2", makeTest({
       }
     }
 `}));
+
+test("precedence 3", makeTest({
+  sources: [{css: `
+    @media (min-width:544px) {
+      a {
+        border-left-color: red;
+      }
+    }
+  `}],
+  mappings: {
+    "$color: red": "blue",
+    "$border: red": "green",
+  },
+  expected: `
+    @media (min-width: 544px) {
+      a {
+        border-left-color: green;
+      }
+    }
+`}));
