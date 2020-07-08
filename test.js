@@ -657,3 +657,51 @@ test("border 4", makeTest({
       }
     }
 `}));
+
+test("precedence 1", makeTest({
+  sources: [{css: `
+    @media (min-width:544px) {
+      a {
+        border-color: red;
+        background-color: red;
+      }
+    }
+  `}],
+  mappings: {
+    "$color: red": "yellow",
+    "$border: red": "green",
+    "$background: red": "green",
+  },
+  expected: `
+    @media (min-width: 544px) {
+      a {
+        border-color: green;
+        background-color: green;
+      }
+    }
+`}));
+
+test("precedence 2", makeTest({
+  sources: [{css: `
+    @media (min-width:544px) {
+      a {
+        border-color: red;
+        background-color: red;
+      }
+    }
+  `}],
+  mappings: {
+    "$color: red": "blue",
+    "$border: red": "green",
+    "$background: red": "green",
+    "border-color: red": "border-color: yellow",
+    "background-color: red": "background-color: yellow",
+  },
+  expected: `
+    @media (min-width: 544px) {
+      a {
+        border-color: yellow;
+        background-color: yellow;
+      }
+    }
+`}));
