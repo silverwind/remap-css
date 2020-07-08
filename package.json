@@ -41,8 +41,8 @@
     "split-string": "6.1.0"
   },
   "devDependencies": {
-    "eslint": "7.3.1",
-    "eslint-config-silverwind": "14.0.1",
+    "eslint": "7.4.0",
+    "eslint-config-silverwind": "16.0.1",
     "jest": "26.1.0",
     "updates": "10.2.15",
     "versions": "8.4.2"
