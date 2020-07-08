@@ -190,7 +190,7 @@ test("special mapping name", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* source #0: "red" */\na {\nbackground: blue;\n}`,
+  expectedExact: `/* source #0: "red" */\na {\nbackground-color: blue;\n}`,
 }));
 
 test("ignore atrules", makeTest({
@@ -209,7 +209,7 @@ test("ignore atrules", makeTest({
     indentSize: 0,
     comments: true,
   },
-  expectedExact: `/* source #0: "red" */\na {\nbackground: blue;\n}`,
+  expectedExact: `/* source #0: "red" */\na {\nbackground-color: blue;\n}`,
 }));
 
 test("atrules", makeTest({
@@ -226,7 +226,7 @@ test("atrules", makeTest({
   expected: `
     @media screen {
       a {
-        background: blue;
+        background-color: blue;
       }
     }
 `}));
@@ -249,7 +249,7 @@ test("atrules comments", makeTest({
   opts: {
     comments: true,
   },
-  expectedExact: `/* source #0: "red", "green" */\n@media screen {\n  a {\n    background: blue;\n  }\n  b {\n    background: yellow;\n  }\n}`,
+  expectedExact: `/* source #0: "red", "green" */\n@media screen {\n  a {\n    background-color: blue;\n  }\n  b {\n    background-color: yellow;\n  }\n}`,
 }));
 
 test("keyframe atrule, no prefix", makeTest({
@@ -269,7 +269,7 @@ test("keyframe atrule, no prefix", makeTest({
   expected: `
     @keyframes blink {
       50% {
-        background: blue;
+        background-color: blue;
       }
     }
 `}));
@@ -722,6 +722,25 @@ test("precedence 3", makeTest({
     @media (min-width: 544px) {
       a {
         border-left-color: green;
+      }
+    }
+`}));
+
+test("background longhand", makeTest({
+  sources: [{css: `
+    @media (min-width:544px) {
+      a {
+        background: red url("/assets/images/octicons/search.svg") no-repeat 6px;
+      }
+    }
+  `}],
+  mappings: {
+    "$color: red": "green",
+  },
+  expected: `
+    @media (min-width: 544px) {
+      a {
+        background-color: green;
       }
     }
 `}));

@@ -340,18 +340,28 @@ const borderColorLonghands = new Set([
   "border-bottom-color",
 ]);
 
+const backgroundColorShorthands = new Set([
+  "background",
+]);
+
+const backgroundColorLonghands = new Set([
+  "background-color",
+]);
+
 const borderColorVars = new Set([...borderColorShorthands, ...borderColorLonghands]);
+const backgroundColorVars = new Set([...backgroundColorShorthands, ...backgroundColorLonghands]);
+const boxShadowVars = new Set(["box-shadow"]);
 
 function checkNode(node, prop, normalizedValue, oldColors, colorMappings, borderMappings, boxShadowMappings, backgroundMappings) {
-  if (borderColorVars.has(prop)) {
+  if (borderColorVars.has(prop) || prop === "border-image") {
     const newValue = getNewColorValue(normalizedValue, borderMappings);
     if (newValue) return doReplace(node, oldColors, newValue);
   }
-  if (prop.startsWith("background")) {
+  if (backgroundColorVars.has(prop) || prop === "background-image") {
     const newValue = getNewColorValue(normalizedValue, backgroundMappings);
     if (newValue) return doReplace(node, oldColors, newValue);
   }
-  if (prop === "box-shadow") {
+  if (boxShadowVars.has(prop)) {
     const newValue = getNewColorValue(normalizedValue, boxShadowMappings);
     if (newValue) return doReplace(node, oldColors, newValue);
   }
@@ -420,18 +430,23 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
           if (!newValue) return decl.remove();
           if (opts.validate && !isValidDeclaration(decl.prop, newValue)) return decl.remove();
 
-          if (borderColorShorthands.has(decl.prop) && decl.prop !== "border-color") { // expand border shorthand
-            const expanded = expandShorthandProperty(decl.prop, newValue);
-            let numReplaced = 0;
-            for (const [prop, value] of Object.entries(expanded)) {
-              if (!prop.includes("color")) continue;
-              if (numReplaced === 0) {
-                decl.prop = prop;
-                decl.value = value;
-              } else {
-                decl.cloneBefore({prop, value});
+          if ((borderColorShorthands.has(decl.prop) && decl.prop !== "border-color") || (backgroundColorShorthands.has(decl.prop) && decl.prop !== "background-color-color")) {
+            try {
+              const expanded = expandShorthandProperty(decl.prop, newValue);
+
+              let numReplaced = 0;
+              for (const [prop, value] of Object.entries(expanded)) {
+                if (!prop.includes("color")) continue;
+                if (numReplaced === 0) {
+                  decl.prop = prop;
+                  decl.value = value;
+                } else {
+                  decl.cloneBefore({prop, value});
+                }
+                numReplaced += 1;
               }
-              numReplaced += 1;
+            } catch { // expandShorthandProperty may throw on multiple borders
+              decl.value = newValue;
             }
           } else { // simple replace
             decl.value = newValue;
