@@ -763,6 +763,7 @@ test("background longhand", makeTest({
 test("transparency", makeTest({
   sources: [{css: `
     a {
+      color: transparent;
       background-color: rgba(255,255,255,0);
     }
   `}],
@@ -771,6 +772,22 @@ test("transparency", makeTest({
   },
   expected: `
     a {
-      background-color: transparent;
+      color: transparent;
+    }
+`}));
+
+test("transparency 2", makeTest({
+  sources: [{css: `
+    a {
+      background-image: linear-gradient(180deg, #fff, rgba(245, 245, 245, 0));
+    }
+  `}],
+  mappings: {
+    "$color: #fff": "#222",
+    "$color: transparent": "transparent",
+  },
+  expected: `
+    a {
+      background-image: linear-gradient(180deg, #222, rgba(245, 245, 245, 0));
     }
 `}));

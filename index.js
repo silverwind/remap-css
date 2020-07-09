@@ -311,12 +311,6 @@ function getNewColorValue(normalizedValue, colorMappings) {
     if (r === g && g === b) {
       return assignNewColor(normalizedValue, colorMappings.$monochrome);
     }
-  } else if (normalizedValue.substring(7) === "00") { // fuzzy matching of fully transparent colors
-    for (const [key, value] of Object.entries(colorMappings)) {
-      if (key.substring(7) === "00") {
-        return value;
-      }
-    }
   }
 
   return null; // did not match
