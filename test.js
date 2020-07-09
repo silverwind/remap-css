@@ -759,3 +759,18 @@ test("background longhand", makeTest({
       }
     }
 `}));
+
+test("transparency", makeTest({
+  sources: [{css: `
+    a {
+      background-color: rgba(255,255,255,0);
+    }
+  `}],
+  mappings: {
+    "$color: transparent": "transparent",
+  },
+  expected: `
+    a {
+      background-color: transparent;
+    }
+`}));
