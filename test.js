@@ -569,6 +569,21 @@ test("$box-shadow", makeTest({
     }
 `}));
 
+test("$box-shadow 2", makeTest({
+  sources: [{css: `
+    a {
+      box-shadow: 0 1px 15px rgba(27,31,35,.15) !important;
+    }
+  `}],
+  mappings: {
+    "$box-shadow: rgba(27,31,35,.15)": "#111",
+  },
+  expected: `
+    a {
+      box-shadow: 0 1px 15px #111 !important;
+    }
+`}));
+
 test("border-bottom-color", makeTest({
   sources: [{css: `
     a {
