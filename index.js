@@ -271,9 +271,17 @@ function hasDeclarations(root) {
   return false;
 }
 
+const usoVarToCssVar = memo(value => {
+  return value.replace(/\/\*\[\[(.+?)\]\]\*\//g, (_, name) => `var(--uso-var-expanded-${name})`);
+});
+
+const cssVarToUsoVars = memo(value => {
+  return value.replace(/var\(--(uso-var-expanded-)?(.+?)\)/g, (_, _prefix, name) => `/*[[${name}]]*/`);
+});
+
 const isValidDeclaration = memo((prop, value) => {
   try {
-    value = value.replace(/\/\*\[\[.+?\]\]\*\//g, "var(--name)");
+    value = usoVarToCssVar(value);
     const rule = `a{${prop}: ${value}}`;
     const result = csstreeValidator.validateString(rule);
     const hadError = result["<unknown>"] && result["<unknown>"][0] && result["<unknown>"][0].error instanceof Error;
@@ -387,7 +395,7 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, boxSha
   });
 
   return {
-    newValue: replaced ? postcssValueParser.stringify(nodes) : null,
+    newValue: replaced ? usoVarToCssVar(postcssValueParser.stringify(nodes)) : null,
     oldColors: Array.from(oldColors),
   };
 }
@@ -444,7 +452,7 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
                 }
                 numReplaced += 1;
               }
-            } catch { // expandShorthandProperty may throw on multiple borders
+            } catch { // expandShorthandProperty may throw on multiple borders or css vars
               decl.value = newValue;
             }
           } else { // simple replace
@@ -597,6 +605,9 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
 
   // remove obsolete comments
   output = output.replace(/\* .+\/[\n ]\//gm, "");
+
+  // restore uso vars
+  output = cssVarToUsoVars(output);
 
   // indent everything
   if (opts.indentCss && opts.indentCss > 0) {

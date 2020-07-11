@@ -791,3 +791,18 @@ test("transparency 2", makeTest({
       background-image: linear-gradient(180deg, #222, rgba(245, 245, 245, 0));
     }
 `}));
+
+test("usercss placeholder", makeTest({
+  sources: [{css: `
+    a {
+      background: red;
+    }
+  `}],
+  mappings: {
+    "$color: red": "/*[[base-color]]*/",
+  },
+  expected: `
+    a {
+      background: /*[[base-color]]*/;
+    }
+`}));
