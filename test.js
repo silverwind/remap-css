@@ -866,3 +866,21 @@ test("complex uso var", makeTest({
       box-shadow: 2px 0 0 /*[[base-color]]*/ inset;
     }
 `}));
+test("rgba", makeTest({
+  sources: [{css: `
+    @media (min-width: 777px) {
+      a {
+        background-color: rgba(234, 234, 0, .22);
+      }
+    }
+  `}],
+  mappings: {
+    "$color: rgba(234, 234, 0, .22)": "rgba(36, 36, 36, .22)",
+  },
+  expected: `
+    @media (min-width: 777px) {
+      a {
+        background-color: rgba(36, 36, 36, .22);
+      }
+    }
+`}));
