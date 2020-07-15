@@ -647,7 +647,7 @@ test("border 3", makeTest({
     "$color: red": "yellow",
   },
   expected: `
-    @media (min-width: 544px) {
+    @media (min-width:544px) {
       a {
         border-color: yellow;
       }
@@ -666,7 +666,7 @@ test("border 4", makeTest({
     "$color: red": "yellow",
   },
   expected: `
-    @media (min-width: 544px) {
+    @media (min-width:544px) {
       a {
         border-color: yellow;
       }
@@ -688,7 +688,7 @@ test("precedence 1", makeTest({
     "$background: red": "green",
   },
   expected: `
-    @media (min-width: 544px) {
+    @media (min-width:544px) {
       a {
         border-color: green;
         background-color: green;
@@ -713,7 +713,7 @@ test("precedence 2", makeTest({
     "background-color: red": "background-color: yellow",
   },
   expected: `
-    @media (min-width: 544px) {
+    @media (min-width:544px) {
       a {
         border-color: yellow;
         background-color: yellow;
@@ -734,7 +734,7 @@ test("precedence 3", makeTest({
     "$border: red": "green",
   },
   expected: `
-    @media (min-width: 544px) {
+    @media (min-width:544px) {
       a {
         border-left-color: green;
       }
@@ -753,7 +753,7 @@ test("background longhand", makeTest({
     "$color: red": "green",
   },
   expected: `
-    @media (min-width: 544px) {
+    @media (min-width:544px) {
       a {
         background-color: green;
       }
@@ -792,7 +792,7 @@ test("transparency 2", makeTest({
     }
 `}));
 
-test("usercss placeholder", makeTest({
+test("uso placeholder", makeTest({
   sources: [{css: `
     a {
       background: red;
@@ -804,5 +804,65 @@ test("usercss placeholder", makeTest({
   expected: `
     a {
       background: /*[[base-color]]*/;
+    }
+`}));
+
+test("whitespace after uso important", makeTest({
+  sources: [{css: `
+    a {
+      background: red !important;
+    }
+  `}],
+  mappings: {
+    "$color: red": "/*[[base-color]]*/",
+  },
+  expected: `
+    a {
+      background: /*[[base-color]]*/ !important;
+    }
+`}));
+
+test("no whitespace after uso var", makeTest({
+  sources: [{css: `
+    a {
+      background: red;
+    }
+  `}],
+  mappings: {
+    "$color: red": "20/*[[base-color]]*/20",
+  },
+  expected: `
+    a {
+      background: 20/*[[base-color]]*/20;
+    }
+`}));
+
+test("whitespace after uso var", makeTest({
+  sources: [{css: `
+    a {
+      background: red;
+    }
+  `}],
+  mappings: {
+    "$color: red": "20 /*[[base-color]]*/ 20",
+  },
+  expected: `
+    a {
+      background: 20 /*[[base-color]]*/ 20;
+    }
+`}));
+
+test("complex uso var", makeTest({
+  sources: [{css: `
+    a {
+      box-shadow: 2px 0 0 red inset;
+    }
+  `}],
+  mappings: {
+    "$color: red": "/*[[base-color]]*/",
+  },
+  expected: `
+    a {
+      box-shadow: 2px 0 0 /*[[base-color]]*/ inset;
     }
 `}));

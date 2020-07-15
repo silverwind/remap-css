@@ -4,16 +4,16 @@ const convert = require("color-convert");
 const cssColorNames = require("css-color-names");
 const csstreeValidator = require("csstree-validator");
 const memo = require("nano-memoize");
+const perfectionist = require("perfectionist");
 const postcss = require("postcss");
 const postcssDiscardDuplicates = require("postcss-discard-duplicates");
 const postcssDiscardEmpty = require("postcss-discard-empty");
 const postcssDiscardOverridden = require("postcss-discard-overridden");
+const postcssMergeLonghand = require("postcss-merge-longhand");
 const postcssMergeRules = require("postcss-merge-rules");
 const postcssSafeParser = require("postcss-safe-parser");
 const postcssUniqueSelectors = require("postcss-unique-selectors");
 const postcssValueParser = require("postcss-value-parser");
-const postcssMergeLonghand = require("postcss-merge-longhand");
-const prettier = require("prettier");
 const splitString = require("split-string");
 const {expandShorthandProperty} = require("css-property-parser");
 const {isShorthand} = require("css-shorthand-properties");
@@ -532,14 +532,18 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
   };
 });
 
-function prettierFormat(css, opts) {
-  return prettier.format(css, {
-    parser: "css",
-    tabWidth: opts.indentSize,
-    printWidth: Infinity,
-    useTabs: false,
-    singleQuote: false,
-  });
+async function format(css, opts) {
+  return (await perfectionist.process(css, {
+    cascade: false,
+    colorShorthand: true,
+    indentSize: opts.indentSize,
+    maxAtRuleLength: opts.lineLength,
+    maxSelectorLength: opts.lineLength,
+    maxValueLength: opts.lineLength,
+    trimLeadingZero: true,
+    trimTrailingZeros: true,
+    zeroLengthNoUnit: true,
+  })).css;
 }
 
 module.exports = async function remapCss(sources, mappings, opts = {}) {
@@ -572,7 +576,10 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   output = (await postcss(plugins).process(output, postcssOpts)).css;
 
   // format
-  output = prettierFormat(output, opts);
+  output = await format(output, opts);
+
+  // remove trailing space added by prettier
+  // output = output.replace(/(--uso-var-expanded.+?\)) /g, (_, p1) => p1);
 
   // move comments to their own line
   output = output.replace(/} \/\*/g, "}\n/*");
