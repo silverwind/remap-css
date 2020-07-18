@@ -866,6 +866,7 @@ test("complex uso var", makeTest({
       box-shadow: 2px 0 0 /*[[base-color]]*/ inset;
     }
 `}));
+
 test("rgba", makeTest({
   sources: [{css: `
     @media (min-width: 777px) {
@@ -881,6 +882,27 @@ test("rgba", makeTest({
     @media (min-width: 777px) {
       a {
         background-color: rgba(36, 36, 36, .22);
+      }
+    }
+`}));
+
+test("box-shadow exact precedence", makeTest({
+  sources: [{css: `
+    @media (min-width: 777px) {
+      a {
+        box-shadow: 0 1px 0 #123, inset 0 1px 0 hsla(0, 0%, 100%, .5);
+      }
+    }
+  `}],
+  mappings: {
+    "box-shadow: 0 1px 0 #123, inset 0 1px 0 hsla(0, 0%, 100%, .5);": "box-shadow: none",
+    "$color: #123": "color: red",
+    "$color: hsla(0, 0%, 100%, .5)": "color: green",
+  },
+  expected: `
+    @media (min-width: 777px) {
+      a {
+        box-shadow: none;
       }
     }
 `}));
