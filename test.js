@@ -906,3 +906,22 @@ test("box-shadow exact precedence", makeTest({
       }
     }
 `}));
+
+test("vars", makeTest({
+  sources: [{css: `
+    @media (min-width: 777px) {
+      a {
+        border-top: 1px solid #fff;
+      }
+    }
+  `}],
+  mappings: {
+    "$border: #fff": "var(--border-color)",
+  },
+  expected: `
+    @media (min-width: 777px) {
+      a {
+        border-top-color: var(--border-color);
+      }
+    }
+`}));

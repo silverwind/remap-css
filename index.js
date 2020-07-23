@@ -34,6 +34,7 @@ const splitDecls = memo(str => splitString(str, {separator: ";", quotes: [`"`, `
 const splitSelectors = memo(str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
 const joinSelectors = selectors => selectors.join(", ");
 const uniq = arr => Array.from(new Set(arr));
+const varRe = /var\(--(?!uso-var-expanded).+?\)/;
 
 function srcName(src, index) {
   return src.name || `${prefix}${index}`;
@@ -276,7 +277,7 @@ const usoVarToCssVar = memo(value => {
 });
 
 const cssVarToUsoVars = memo(value => {
-  return value.replace(/var\(--(uso-var-expanded-)?(.+?)\)/g, (_, _prefix, name) => `/*[[${name}]]*/`);
+  return value.replace(/var\(--(uso-var-expanded-)(.+?)\)/g, (_, _prefix, name) => `/*[[${name}]]*/`);
 });
 
 const isValidDeclaration = memo((prop, value) => {
@@ -439,10 +440,13 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
 
           if ((borderColorShorthands.has(decl.prop) && decl.prop !== "border-color") || (backgroundColorShorthands.has(decl.prop) && decl.prop !== "background-color")) {
             try {
-              const expanded = expandShorthandProperty(decl.prop, newValue);
+              // workaround expandShorthandProperty not supporting css vars
+              const containsVar = varRe.test(newValue);
+              const expanded = expandShorthandProperty(decl.prop, containsVar ? "rgba(255,0,255,0)" : newValue);
 
               let numReplaced = 0;
-              for (const [prop, value] of Object.entries(expanded)) {
+              for (let [prop, value] of Object.entries(expanded)) {
+                if (containsVar) value = newValue.match(varRe)[0];
                 if (!prop.includes("color")) continue;
                 if (numReplaced === 0) {
                   decl.prop = prop;
@@ -452,7 +456,7 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
                 }
                 numReplaced += 1;
               }
-            } catch { // expandShorthandProperty may throw on multiple borders or css vars
+            } catch { // expandShorthandProperty may throw on multiple borders
               decl.value = newValue;
             }
           } else { // simple replace
@@ -577,9 +581,6 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
 
   // format
   output = await format(output, opts);
-
-  // remove trailing space added by prettier
-  // output = output.replace(/(--uso-var-expanded.+?\)) /g, (_, p1) => p1);
 
   // move comments to their own line
   output = output.replace(/} \/\*/g, "}\n/*");
