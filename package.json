@@ -41,11 +41,11 @@
     "split-string": "6.1.0"
   },
   "devDependencies": {
-    "eslint": "7.5.0",
-    "eslint-config-silverwind": "18.0.1",
-    "jest": "26.1.0",
-    "updates": "10.3.3",
-    "versions": "8.4.2"
+    "eslint": "7.7.0",
+    "eslint-config-silverwind": "18.0.2",
+    "jest": "26.4.0",
+    "updates": "10.3.4",
+    "versions": "8.4.3"
   },
   "jest": {
     "verbose": false
