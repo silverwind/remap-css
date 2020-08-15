@@ -442,8 +442,7 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
             try {
               // workaround expandShorthandProperty not supporting css vars
               const containsVar = varRe.test(newValue);
-              const expanded = expandShorthandProperty(decl.prop, containsVar ? "rgba(255,0,255,0)" : newValue);
-
+              const expanded = expandShorthandProperty(decl.prop, containsVar ? newValue.replace(varRe, "rgba(255,0,255,0)") : newValue);
               let numReplaced = 0;
               for (let [prop, value] of Object.entries(expanded)) {
                 if (containsVar) value = newValue.match(varRe)[0];
@@ -462,7 +461,6 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
           } else { // simple replace
             decl.value = newValue;
           }
-
           decl.raws._replaced = true;
           matchedDeclStrings.push(oldColors.map(color => `"${color}"`));
         }

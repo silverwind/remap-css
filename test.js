@@ -925,3 +925,22 @@ test("vars", makeTest({
       }
     }
 `}));
+
+test("radial with var", makeTest({
+  sources: [{css: `
+    @media (min-width: 777px) {
+      a {
+        background: radial-gradient(white 40%, transparent 40%) no-repeat
+      }
+    }
+  `}],
+  mappings: {
+    "$background: #ffffff": "var(--border-color)",
+  },
+  expected: `
+    @media (min-width: 777px) {
+      a {
+        background: radial-gradient(var(--border-color) 40%, transparent 40%) no-repeat;
+      }
+    }
+`}));
