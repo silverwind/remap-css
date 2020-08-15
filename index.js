@@ -26,6 +26,7 @@ const defaults = {
   comments: false,
   stylistic: false,
   validate: false,
+  keep: false,
 };
 
 const prefix = "source #";
@@ -435,8 +436,15 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
         } else {
           const {newValue, oldColors} = replaceColorsInValue(decl.prop, decl.value, colorMappings, borderMappings, boxShadowMappings, backgroundMappings);
 
-          if (!newValue) return decl.remove();
-          if (opts.validate && !isValidDeclaration(decl.prop, newValue)) return decl.remove();
+          if (!newValue) {
+            if (!opts.keep) decl.remove();
+            return;
+          }
+
+          if (opts.validate && !isValidDeclaration(decl.prop, newValue)) {
+            decl.remove();
+            return;
+          }
 
           if ((borderColorShorthands.has(decl.prop) && decl.prop !== "border-color") || (backgroundColorShorthands.has(decl.prop) && decl.prop !== "background-color")) {
             try {
@@ -499,7 +507,7 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
 
     root.walkAtRules(node => {
       node.walkDecls(decl => {
-        if (!decl.raws._replaced) {
+        if (!decl.raws._replaced && !opts.keep) {
           decl.remove();
         }
       });

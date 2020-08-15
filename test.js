@@ -930,7 +930,7 @@ test("radial with var", makeTest({
   sources: [{css: `
     @media (min-width: 777px) {
       a {
-        background: radial-gradient(white 40%, transparent 40%) no-repeat
+        background: radial-gradient(white 40%, transparent 40%) no-repeat;
       }
     }
   `}],
@@ -940,6 +940,30 @@ test("radial with var", makeTest({
   expected: `
     @media (min-width: 777px) {
       a {
+        background: radial-gradient(var(--border-color) 40%, transparent 40%) no-repeat;
+      }
+    }
+`}));
+
+test("keep", makeTest({
+  sources: [{css: `
+    @media (min-width: 777px) {
+      a {
+        color: blue;
+        background: radial-gradient(white 40%, transparent 40%) no-repeat;
+      }
+    }
+  `}],
+  mappings: {
+    "$background: #ffffff": "var(--border-color)",
+  },
+  opts: {
+    keep: true,
+  },
+  expected: `
+    @media (min-width: 777px) {
+      a {
+        color: blue;
         background: radial-gradient(var(--border-color) 40%, transparent 40%) no-repeat;
       }
     }

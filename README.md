@@ -45,6 +45,7 @@ Returns a `Promise` that resolves to a CSS string.
   - `comments`: *boolean* Whether to output comments. Default: `false`.
   - `stylistic`: *boolean* Whether to perform stylistic tweaks on selectors. Default: `false`.
   - `validate`: *boolean* Validate property values and ignore declarations that fail it. Default: `false`.
+  - `keep`: *boolean* Retain non-matching declarations in the output. Default: `false`.
 
 These special mapping keys supported:
 
