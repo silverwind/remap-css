@@ -1,6 +1,6 @@
 "use strict";
 
-const convert = require("color-convert");
+const colorConvert = require("color-convert");
 const cssColorNames = require("css-color-names");
 const csstreeValidator = require("csstree-validator");
 const knownCssProperties = require("known-css-properties");
@@ -156,13 +156,13 @@ const normalizeColor = memo(value => {
   if (node && node.type === "function") {
     if (["rgb", "rgba"].includes(node.value)) {
       const [r, g, b, a] = node.nodes.filter(node => node.type === "word").map(node => Number(node.value));
-      value = normalizeHexColor(`#${convert.rgb.hex(r, g, b).toLowerCase()}${alphaToHex(a)}`);
+      value = normalizeHexColor(`#${colorConvert.rgb.hex(r, g, b).toLowerCase()}${alphaToHex(a)}`);
     } else if (["hsl", "hsla"].includes(node.value)) {
       let [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => String(node.value));
       h = Number(h);
       s = Number(s.replace("%", ""));
       l = Number(l.replace("%", ""));
-      value = normalizeHexColor(`#${convert.hsl.hex(h, s, l).toLowerCase()}${alphaToHex(a)}`);
+      value = normalizeHexColor(`#${colorConvert.hsl.hex(h, s, l).toLowerCase()}${alphaToHex(a)}`);
     }
   }
 
@@ -323,7 +323,7 @@ function getNewColorValue(normalizedValue, colorMappings) {
   if (colorMappings[normalizedValue]) {
     return colorMappings[normalizedValue];
   } else if (colorMappings.$monochrome) {
-    const [r, g, b] = convert.hex.rgb(normalizedValue);
+    const [r, g, b] = colorConvert.hex.rgb(normalizedValue);
     if (r === g && g === b) {
       return assignNewColor(normalizedValue, colorMappings.$monochrome);
     }
