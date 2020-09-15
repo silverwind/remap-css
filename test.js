@@ -968,3 +968,18 @@ test("keep", makeTest({
       }
     }
 `}));
+
+test("unknown properties", makeTest({
+  sources: [{css: `
+    a {
+      *background: red;
+    }
+  `}],
+  mappings: {
+    "$color: red": "green",
+  },
+  opts: {
+    validate: true,
+  },
+  expected: ``,
+}));

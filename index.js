@@ -3,6 +3,7 @@
 const convert = require("color-convert");
 const cssColorNames = require("css-color-names");
 const csstreeValidator = require("csstree-validator");
+const knownCssProperties = require("known-css-properties");
 const memo = require("nano-memoize");
 const perfectionist = require("perfectionist");
 const postcss = require("postcss");
@@ -36,6 +37,7 @@ const splitSelectors = memo(str => splitString(str, {separator: ",", quotes: [`"
 const joinSelectors = selectors => selectors.join(", ");
 const uniq = arr => Array.from(new Set(arr));
 const varRe = /var\(--(?!uso-var-expanded).+?\)/;
+const knownProperties = new Set(knownCssProperties.all);
 
 function srcName(src, index) {
   return src.name || `${prefix}${index}`;
@@ -282,6 +284,8 @@ const cssVarToUsoVars = memo(value => {
 });
 
 const isValidDeclaration = memo((prop, value) => {
+  if (!knownProperties.has(prop)) return false;
+
   try {
     value = usoVarToCssVar(value);
     const rule = `a{${prop}: ${value}}`;

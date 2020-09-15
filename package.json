@@ -27,6 +27,7 @@
     "css-property-parser": "1.0.6",
     "css-shorthand-properties": "1.1.1",
     "csstree-validator": "1.5.1",
+    "known-css-properties": "0.19.0",
     "nano-memoize": "1.2.0",
     "perfectionist": "2.4.0",
     "postcss": "7.0.32",
