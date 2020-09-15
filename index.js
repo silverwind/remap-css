@@ -284,7 +284,9 @@ const cssVarToUsoVars = memo(value => {
 });
 
 const isValidDeclaration = memo((prop, value) => {
-  if (!knownProperties.has(prop)) return false;
+  if (!knownProperties.has(prop) && !/^--[a-z0-9]/i.test(prop)) {
+    return false;
+  }
 
   try {
     value = usoVarToCssVar(value);
