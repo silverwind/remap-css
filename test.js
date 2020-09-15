@@ -983,3 +983,22 @@ test("unknown properties", makeTest({
   },
   expected: ``,
 }));
+
+
+test("css vars", makeTest({
+  sources: [{css: `
+    a {
+      --var: red;
+    }
+  `}],
+  mappings: {
+    "$color: red": "green",
+  },
+  opts: {
+    validate: true,
+  },
+  expected: `
+    a {
+      --var: green;
+    }
+`}));
