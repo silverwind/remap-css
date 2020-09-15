@@ -984,7 +984,6 @@ test("unknown properties", makeTest({
   expected: ``,
 }));
 
-
 test("css vars", makeTest({
   sources: [{css: `
     a {
