@@ -1,7 +1,6 @@
 "use strict";
 
 const remapCss = require(".");
-const {test, expect} = global;
 
 function unintend(str) {
   str = str.replace(/^\n/, "").replace(/\n +$/g, "\n");
