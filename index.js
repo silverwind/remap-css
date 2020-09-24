@@ -43,6 +43,15 @@ function srcName(src, index) {
   return src.name || `${prefix}${index}`;
 }
 
+// https://github.com/postcss/postcss/issues/1426
+function getPropertyProp(decl) {
+  if (decl.raws && decl.raws.before && decl.raws.before.trim()) {
+    return `${decl.raws.before.trim()}${decl.prop}`;
+  } else {
+    return decl.prop;
+  }
+}
+
 function rewriteSelectors(selectors, opts, src) {
   const ret = [];
 
@@ -282,15 +291,6 @@ const usoVarToCssVar = memo(value => {
 const cssVarToUsoVars = memo(value => {
   return value.replace(/var\(--(uso-var-expanded-)(.+?)\)/g, (_, _prefix, name) => `/*[[${name}]]*/`);
 });
-
-// https://github.com/postcss/postcss/issues/1426
-const getPropertyProp = decl => {
-  if (decl.raws && decl.raws.before && decl.raws.before.trim()) {
-    return `${decl.raws.before.trim()}${decl.prop}`;
-  } else {
-    return decl.prop;
-  }
-};
 
 const isValidDeclaration = memo((prop, value) => {
   if (!knownProperties.has(prop) && !/^--./i.test(prop)) {
