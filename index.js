@@ -44,7 +44,7 @@ function srcName(src, index) {
 }
 
 // https://github.com/postcss/postcss/issues/1426
-function getPropertyProp(decl) {
+function getProperty(decl) {
   if (decl.raws && decl.raws.before && decl.raws.before.trim()) {
     return `${decl.raws.before.trim()}${decl.prop}`;
   } else {
@@ -179,7 +179,7 @@ const normalizeColor = memo(value => {
 });
 
 function normalizeDecl({prop, raws, value, important}) {
-  prop = getPropertyProp({prop, raws}).toLowerCase();
+  prop = getProperty({prop, raws}).toLowerCase();
 
   const origValue = value;
 
@@ -458,7 +458,7 @@ const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappi
               return;
             }
 
-            if (opts.validate && !isValidDeclaration(getPropertyProp(decl), newValue)) {
+            if (opts.validate && !isValidDeclaration(getProperty(decl), newValue)) {
               decl.remove();
               return;
             }
