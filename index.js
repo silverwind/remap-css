@@ -421,8 +421,8 @@ const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappi
   const commentStart = srcName(src, index, opts);
 
   return {
-    "postcssPlugin": "remap-css",
-    Root(root) {
+    postcssPlugin: "remap-css",
+    Root: root => {
       root.walkRules(node => {
         const matchedDeclStrings = [];
 
