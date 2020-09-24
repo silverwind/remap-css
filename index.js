@@ -169,8 +169,8 @@ const normalizeColor = memo(value => {
   return value;
 });
 
-function normalizeDecl({prop, value, important}) {
-  prop = prop.toLowerCase();
+function normalizeDecl({prop, raws, value, important}) {
+  prop = getPropertyProp({prop, raws}).toLowerCase();
 
   const origValue = value;
 
@@ -282,6 +282,15 @@ const usoVarToCssVar = memo(value => {
 const cssVarToUsoVars = memo(value => {
   return value.replace(/var\(--(uso-var-expanded-)(.+?)\)/g, (_, _prefix, name) => `/*[[${name}]]*/`);
 });
+
+// https://github.com/postcss/postcss/issues/1426
+const getPropertyProp = decl => {
+  if (decl.raws && decl.raws.before && decl.raws.before.trim()) {
+    return `${decl.raws.before.trim()}${decl.prop}`;
+  } else {
+    return decl.prop;
+  }
+};
 
 const isValidDeclaration = memo((prop, value) => {
   if (!knownProperties.has(prop) && !/^--./i.test(prop)) {
@@ -447,7 +456,7 @@ const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, bo
             return;
           }
 
-          if (opts.validate && !isValidDeclaration(decl.prop, newValue)) {
+          if (opts.validate && !isValidDeclaration(getPropertyProp(decl), newValue)) {
             decl.remove();
             return;
           }

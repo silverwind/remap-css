@@ -1000,3 +1000,39 @@ test("css vars", makeTest({
       --var: green;
     }
 `}));
+
+test("invalid property - validate", makeTest({
+  sources: [{css: `
+    a {
+      border: 1px solid red;
+      *background: red;
+    }
+  `}],
+  mappings: {
+    "$color: red": "yellow",
+  },
+  opts: {
+    validate: true,
+  },
+  expected: `
+    a {
+      border-color: yellow;
+    }
+`}));
+
+test("invalid property - no validate", makeTest({
+  sources: [{css: `
+    a {
+      border: 1px solid red;
+      *background: red;
+    }
+  `}],
+  mappings: {
+    "$color: red": "yellow",
+  },
+  expected: `
+    a {
+      border-color: yellow;
+      *background-color: yellow;
+    }
+`}));
