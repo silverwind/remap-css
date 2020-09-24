@@ -45,8 +45,9 @@ function srcName(src, index) {
 
 // https://github.com/postcss/postcss/issues/1426
 function getProperty(decl) {
-  if (decl.raws && decl.raws.before && decl.raws.before.trim()) {
-    return `${decl.raws.before.trim()}${decl.prop}`;
+  const before = decl.raws && decl.raws.before && decl.raws.before.trim();
+  if (before === "*" || before === "_") {
+    return `${before}${decl.prop}`;
   } else {
     return decl.prop;
   }

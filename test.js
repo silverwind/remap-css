@@ -1006,6 +1006,8 @@ test("invalid property - validate", makeTest({
     a {
       border: 1px solid red;
       *background: red;
+      _background: red;
+      !background: red;
     }
   `}],
   mappings: {
@@ -1025,6 +1027,8 @@ test("invalid property - no validate", makeTest({
     a {
       border: 1px solid red;
       *background: red;
+      _background: red;
+      !background: red;
     }
   `}],
   mappings: {
@@ -1034,5 +1038,7 @@ test("invalid property - no validate", makeTest({
     a {
       border-color: yellow;
       *background-color: yellow;
+      _background-color: yellow;
+      !background: yellow;
     }
 `}));
