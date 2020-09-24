@@ -417,145 +417,149 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, boxSha
   };
 }
 
-const plugin = postcss.plugin("remap-css", (src, declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings, names, index, opts) => {
+const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings, names, index, opts) => {
   const commentStart = srcName(src, index, opts);
 
-  return async root => {
-    root.walkRules(node => {
-      const matchedDeclStrings = [];
-
-      node.walkDecls(decl => {
-        const declString = stringifyDecl({prop: decl.prop, value: decl.value, important: decl.important});
-        const newDecls = [];
-        if (declMappings[declString]) {
-          for (const newDecl of declMappings[declString] || []) {
-            const {prop, value, important, origValue} = newDecl;
-            const newProp = prop;
-            const newValue = origValue || value;
-            const newImportant = Boolean(decl.important || important);
-            if (opts.validate && !isValidDeclaration(newProp, newValue)) return decl.remove();
-            newDecls.push(decl.clone({
-              prop: newProp,
-              value: newValue,
-              important: newImportant,
-              raws: {_replaced: true},
-            }));
-            matchedDeclStrings.push(`"${names[declString]}"`);
-          }
-
-          decl.replaceWith(...newDecls);
-
-          if (!node.raws.semicolon) {
-            node.raws.semicolon = true; // ensure semicolon at the end of the rule
-          }
-        } else {
-          const {newValue, oldColors} = replaceColorsInValue(decl.prop, decl.value, colorMappings, borderMappings, boxShadowMappings, backgroundMappings);
-
-          if (!newValue) {
-            if (!opts.keep) decl.remove();
-            return;
-          }
-
-          if (opts.validate && !isValidDeclaration(getPropertyProp(decl), newValue)) {
-            decl.remove();
-            return;
-          }
-
-          if ((borderColorShorthands.has(decl.prop) && decl.prop !== "border-color") || (backgroundColorShorthands.has(decl.prop) && decl.prop !== "background-color")) {
-            try {
-              // workaround expandShorthandProperty not supporting css vars
-              const containsVar = varRe.test(newValue);
-              const expanded = expandShorthandProperty(decl.prop, containsVar ? newValue.replace(varRe, "rgba(255,0,255,0)") : newValue);
-              let numReplaced = 0;
-              for (let [prop, value] of Object.entries(expanded)) {
-                if (containsVar) value = newValue.match(varRe)[0];
-                if (!prop.includes("color")) continue;
-                if (numReplaced === 0) {
-                  decl.prop = prop;
-                  decl.value = value;
-                } else {
-                  decl.cloneBefore({prop, value});
-                }
-                numReplaced += 1;
-              }
-            } catch { // expandShorthandProperty may throw on multiple borders
-              decl.value = newValue;
-            }
-          } else { // simple replace
-            decl.value = newValue;
-          }
-          decl.raws._replaced = true;
-          matchedDeclStrings.push(oldColors.map(color => `"${color}"`));
-        }
-      });
-
-      if (matchedDeclStrings.length) {
-        const selectors = splitSelectors(node.selector);
-        const newSelectors = rewriteSelectors(selectors, opts, src).filter(selector => {
-          for (const re of opts.ignoreSelectors) {
-            if (re.test(selector)) return false;
-          }
-          return true;
-        });
-
-        if (newSelectors.length) {
-          if (opts.comments) {
-            const targetNode = node.parent.type === "atrule" ? node.parent : node;
-            const prevNode = targetNode.prev();
-
-            if (prevNode && prevNode.type === "comment" && prevNode.text && prevNode.text.startsWith(commentStart)) {
-              const prevDeclStrings = prevNode.text.match(/".+?"/g);
-              prevNode.text = `${commentStart}: ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
-            } else {
-              root.insertBefore(targetNode, makeComment(`${commentStart}: ${uniq(matchedDeclStrings).join(", ")}`));
-            }
-          }
-
-          if (node.selector && !(node.parent && node.parent.type === "atrule" && atRulesWithNoSelectors.has(node.parent.name))) {
-            node.selector = joinSelectors(newSelectors);
-          }
-        } else {
-          node.remove();
-        }
-      }
-    });
-
-    root.walkAtRules(node => {
-      node.walkDecls(decl => {
-        if (!decl.raws._replaced && !opts.keep) {
-          decl.remove();
-        }
-      });
-    });
-
-    root.walk(node => {
-      if (node.type === "decl") return;
-      if (node.type === "comment") {
-        if (node.text.startsWith(commentStart)) return;
-        node.remove();
-      }
-      if (!hasDeclarations(node)) node.remove();
-      if (node.type === "rule") {
-        // remove duplicate props (those are actual errors in the sources)
-        const seen = {};
+  return {
+    "postcssPlugin": "remap-css",
+    Root(root) {
+      root.walkRules(node => {
+        const matchedDeclStrings = [];
 
         node.walkDecls(decl => {
-          if (decl.raws._replaced) return;
-          if (!seen[decl.prop]) seen[decl.prop] = [];
-          seen[decl.prop].push(decl);
+          const declString = stringifyDecl({prop: decl.prop, value: decl.value, important: decl.important});
+          const newDecls = [];
+          if (declMappings[declString]) {
+            for (const newDecl of declMappings[declString] || []) {
+              const {prop, value, important, origValue} = newDecl;
+              const newProp = prop;
+              const newValue = origValue || value;
+              const newImportant = Boolean(decl.important || important);
+              if (opts.validate && !isValidDeclaration(newProp, newValue)) return decl.remove();
+              newDecls.push(decl.clone({
+                prop: newProp,
+                value: newValue,
+                important: newImportant,
+                raws: {_replaced: true},
+              }));
+              matchedDeclStrings.push(`"${names[declString]}"`);
+            }
+
+            decl.replaceWith(...newDecls);
+
+            if (!node.raws.semicolon) {
+              node.raws.semicolon = true; // ensure semicolon at the end of the rule
+            }
+          } else {
+            const {newValue, oldColors} = replaceColorsInValue(decl.prop, decl.value, colorMappings, borderMappings, boxShadowMappings, backgroundMappings);
+
+            if (!newValue) {
+              if (!opts.keep) decl.remove();
+              return;
+            }
+
+            if (opts.validate && !isValidDeclaration(getPropertyProp(decl), newValue)) {
+              decl.remove();
+              return;
+            }
+
+            if ((borderColorShorthands.has(decl.prop) && decl.prop !== "border-color") || (backgroundColorShorthands.has(decl.prop) && decl.prop !== "background-color")) {
+              try {
+                // workaround expandShorthandProperty not supporting css vars
+                const containsVar = varRe.test(newValue);
+                const expanded = expandShorthandProperty(decl.prop, containsVar ? newValue.replace(varRe, "rgba(255,0,255,0)") : newValue);
+                let numReplaced = 0;
+                for (let [prop, value] of Object.entries(expanded)) {
+                  if (containsVar) value = newValue.match(varRe)[0];
+                  if (!prop.includes("color")) continue;
+                  if (numReplaced === 0) {
+                    decl.prop = prop;
+                    decl.value = value;
+                  } else {
+                    decl.cloneBefore({prop, value});
+                  }
+                  numReplaced += 1;
+                }
+              } catch { // expandShorthandProperty may throw on multiple borders
+                decl.value = newValue;
+              }
+            } else { // simple replace
+              decl.value = newValue;
+            }
+            decl.raws._replaced = true;
+            matchedDeclStrings.push(oldColors.map(color => `"${color}"`));
+          }
         });
 
-        for (const nodes of Object.values(seen)) {
-          if (nodes.length > 1) {
-            for (const node of nodes.slice(0, -1)) {
-              node.remove();
+        if (matchedDeclStrings.length) {
+          const selectors = splitSelectors(node.selector);
+          const newSelectors = rewriteSelectors(selectors, opts, src).filter(selector => {
+            for (const re of opts.ignoreSelectors) {
+              if (re.test(selector)) return false;
+            }
+            return true;
+          });
+
+          if (newSelectors.length) {
+            if (opts.comments) {
+              const targetNode = node.parent.type === "atrule" ? node.parent : node;
+              const prevNode = targetNode.prev();
+
+              if (prevNode && prevNode.type === "comment" && prevNode.text && prevNode.text.startsWith(commentStart)) {
+                const prevDeclStrings = prevNode.text.match(/".+?"/g);
+                prevNode.text = `${commentStart}: ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
+              } else {
+                root.insertBefore(targetNode, makeComment(`${commentStart}: ${uniq(matchedDeclStrings).join(", ")}`));
+              }
+            }
+
+            if (node.selector && !(node.parent && node.parent.type === "atrule" && atRulesWithNoSelectors.has(node.parent.name))) {
+              node.selector = joinSelectors(newSelectors);
+            }
+          } else {
+            node.remove();
+          }
+        }
+      });
+
+      root.walkAtRules(node => {
+        node.walkDecls(decl => {
+          if (!decl.raws._replaced && !opts.keep) {
+            decl.remove();
+          }
+        });
+      });
+
+      root.walk(node => {
+        if (node.type === "decl") return;
+        if (node.type === "comment") {
+          if (node.text.startsWith(commentStart)) return;
+          node.remove();
+        }
+        if (!hasDeclarations(node)) node.remove();
+        if (node.type === "rule") {
+          // remove duplicate props (those are actual errors in the sources)
+          const seen = {};
+
+          node.walkDecls(decl => {
+            if (decl.raws._replaced) return;
+            if (!seen[decl.prop]) seen[decl.prop] = [];
+            seen[decl.prop].push(decl);
+          });
+
+          for (const nodes of Object.values(seen)) {
+            if (nodes.length > 1) {
+              for (const node of nodes.slice(0, -1)) {
+                node.remove();
+              }
             }
           }
         }
-      }
-    });
+      });
+    },
   };
-});
+};
+plugin.postcss = true;
 
 async function format(css, opts) {
   return (await perfectionist.process(css, {
