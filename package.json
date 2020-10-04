@@ -30,22 +30,22 @@
     "known-css-properties": "0.20.0",
     "nano-memoize": "1.2.0",
     "perfectionist": "2.4.0",
-    "postcss": "8.0.9",
+    "postcss": "8.1.1",
     "postcss-discard-duplicates": "4.0.2",
     "postcss-discard-empty": "4.0.1",
     "postcss-discard-overridden": "4.0.1",
     "postcss-merge-longhand": "4.0.11",
     "postcss-merge-rules": "4.0.3",
-    "postcss-safe-parser": "5.0.1",
+    "postcss-safe-parser": "5.0.2",
     "postcss-unique-selectors": "4.0.1",
     "postcss-value-parser": "4.1.0",
     "split-string": "6.1.0"
   },
   "devDependencies": {
-    "eslint": "7.9.0",
-    "eslint-config-silverwind": "18.0.9",
+    "eslint": "7.10.0",
+    "eslint-config-silverwind": "20.0.0",
     "jest": "26.4.2",
-    "updates": "11.1.4",
+    "updates": "11.2.0",
     "versions": "8.4.3"
   },
   "jest": {
