@@ -369,14 +369,14 @@ test("$border 0", makeTest({
   },
   expected: ``}));
 
-test("$color in gradient hex", makeTest({
+test("$value in gradient hex", makeTest({
   sources: [{css: `
     a:hover {
       background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
     }
   `}],
   mappings: {
-    "$color: #1074e7": "#123",
+    "$value: #1074e7": "#123",
   },
   expected: `
   a:hover {
@@ -384,14 +384,14 @@ test("$color in gradient hex", makeTest({
   }
 `}));
 
-test("$color in gradient rgb", makeTest({
+test("$value in gradient rgb", makeTest({
   sources: [{css: `
     a:hover {
       background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
     }
   `}],
   mappings: {
-    "$color: rgb(255,255,255,0)": "#123",
+    "$value: rgb(255,255,255,0)": "#123",
   },
   expected: `
   a:hover {
@@ -399,14 +399,14 @@ test("$color in gradient rgb", makeTest({
   }
 `}));
 
-test("$color in gradient rgb", makeTest({
+test("$value in gradient rgb", makeTest({
   sources: [{css: `
     a:hover {
       background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
     }
   `}],
   mappings: {
-    "$color: rgb(255,255,255,0)": "#123",
+    "$value: rgb(255,255,255,0)": "#123",
   },
   expected: `
   a:hover {
@@ -414,14 +414,14 @@ test("$color in gradient rgb", makeTest({
   }
 `}));
 
-test("$color hsla", makeTest({
+test("$value hsla", makeTest({
   sources: [{css: `
     a:hover {
       background: linear-gradient(to bottom, hsla(0,0%,100%,.125), rgb(255,255,255,0))
     }
   `}],
   mappings: {
-    "$color: hsla(0,0%,100%,.125)": "#123",
+    "$value: hsla(0,0%,100%,.125)": "#123",
   },
   expected: `
   a:hover {
@@ -429,14 +429,14 @@ test("$color hsla", makeTest({
   }
 `}));
 
-test("$color: $monochrome", makeTest({
+test("$value: $monochrome", makeTest({
   sources: [{css: `
     a:hover {
       background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
     }
   `}],
   mappings: {
-    "$color: $monochrome": "#123",
+    "$value: $monochrome": "#123",
   },
   expected: `
   a:hover {
@@ -444,14 +444,14 @@ test("$color: $monochrome", makeTest({
   }
 `}));
 
-test("$color: $monochrome - $invert", makeTest({
+test("$value: $monochrome - $invert", makeTest({
   sources: [{css: `
     a:hover {
       background: linear-gradient(to bottom, #1074e7, rgb(40,40,40,0))
     }
   `}],
   mappings: {
-    "$color: $monochrome": "$invert",
+    "$value: $monochrome": "$invert",
   },
   expected: `
     a:hover {
@@ -482,8 +482,8 @@ test("multivalue", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "blue",
-    "$color: green": "yellow",
+    "$value: red": "blue",
+    "$value: green": "yellow",
   },
   expected: `
     a {
@@ -500,7 +500,7 @@ test("multivalue 2", makeTest({
   mappings: {
     "$border: #fff": "#222",
     "$border: #eee": "#333",
-    "$color: red": "#444",
+    "$value: red": "#444",
   },
   expected: `
     a {
@@ -545,7 +545,7 @@ test("gradient hsla", makeTest({
     }
   `}],
   mappings: {
-    "$color: hsla(0,10%,10%,.5)": "#111",
+    "$value: hsla(0,10%,10%,.5)": "#111",
   },
   expected: `
     a {
@@ -626,7 +626,7 @@ test("border 2", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "yellow",
+    "$value: red": "yellow",
   },
   expected: `
     a {
@@ -643,7 +643,7 @@ test("border 3", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "yellow",
+    "$value: red": "yellow",
   },
   expected: `
     @media (min-width:544px) {
@@ -662,7 +662,7 @@ test("border 4", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "yellow",
+    "$value: red": "yellow",
   },
   expected: `
     @media (min-width:544px) {
@@ -682,7 +682,7 @@ test("precedence 1", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "yellow",
+    "$value: red": "yellow",
     "$border: red": "green",
     "$background: red": "green",
   },
@@ -705,7 +705,7 @@ test("precedence 2", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "blue",
+    "$value: red": "blue",
     "$border: red": "green",
     "$background: red": "green",
     "border-color: red": "border-color: yellow",
@@ -729,7 +729,7 @@ test("precedence 3", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "blue",
+    "$value: red": "blue",
     "$border: red": "green",
   },
   expected: `
@@ -749,7 +749,7 @@ test("background longhand", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "green",
+    "$value: red": "green",
   },
   expected: `
     @media (min-width:544px) {
@@ -767,7 +767,7 @@ test("transparency", makeTest({
     }
   `}],
   mappings: {
-    "$color: transparent": "transparent",
+    "$value: transparent": "transparent",
   },
   expected: `
     a {
@@ -782,8 +782,8 @@ test("transparency 2", makeTest({
     }
   `}],
   mappings: {
-    "$color: #fff": "#222",
-    "$color: transparent": "transparent",
+    "$value: #fff": "#222",
+    "$value: transparent": "transparent",
   },
   expected: `
     a {
@@ -798,7 +798,7 @@ test("uso placeholder", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "/*[[base-color]]*/",
+    "$value: red": "/*[[base-color]]*/",
   },
   expected: `
     a {
@@ -813,7 +813,7 @@ test("whitespace after uso important", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "/*[[base-color]]*/",
+    "$value: red": "/*[[base-color]]*/",
   },
   expected: `
     a {
@@ -828,7 +828,7 @@ test("no whitespace after uso var", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "20/*[[base-color]]*/20",
+    "$value: red": "20/*[[base-color]]*/20",
   },
   expected: `
     a {
@@ -843,7 +843,7 @@ test("whitespace after uso var", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "20 /*[[base-color]]*/ 20",
+    "$value: red": "20 /*[[base-color]]*/ 20",
   },
   expected: `
     a {
@@ -858,7 +858,7 @@ test("complex uso var", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "/*[[base-color]]*/",
+    "$value: red": "/*[[base-color]]*/",
   },
   expected: `
     a {
@@ -875,7 +875,7 @@ test("rgba", makeTest({
     }
   `}],
   mappings: {
-    "$color: rgba(234, 234, 0, .22)": "rgba(36, 36, 36, .22)",
+    "$value: rgba(234, 234, 0, .22)": "rgba(36, 36, 36, .22)",
   },
   expected: `
     @media (min-width: 777px) {
@@ -895,8 +895,8 @@ test("box-shadow exact precedence", makeTest({
   `}],
   mappings: {
     "box-shadow: 0 1px 0 #123, inset 0 1px 0 hsla(0, 0%, 100%, .5);": "box-shadow: none",
-    "$color: #123": "color: red",
-    "$color: hsla(0, 0%, 100%, .5)": "color: green",
+    "$value: #123": "color: red",
+    "$value: hsla(0, 0%, 100%, .5)": "color: green",
   },
   expected: `
     @media (min-width: 777px) {
@@ -975,7 +975,7 @@ test("unknown properties", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "green",
+    "$value: red": "green",
   },
   opts: {
     validate: true,
@@ -990,7 +990,7 @@ test("css vars", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "green",
+    "$value: red": "green",
   },
   opts: {
     validate: true,
@@ -1011,7 +1011,7 @@ test("invalid property - validate", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "yellow",
+    "$value: red": "yellow",
   },
   opts: {
     validate: true,
@@ -1032,7 +1032,7 @@ test("invalid property - no validate", makeTest({
     }
   `}],
   mappings: {
-    "$color: red": "yellow",
+    "$value: red": "yellow",
   },
   expected: `
     a {
@@ -1040,5 +1040,20 @@ test("invalid property - no validate", makeTest({
       *background-color: yellow;
       _background-color: yellow;
       !background: yellow;
+    }
+`}));
+
+test("whitespace after uso var", makeTest({
+  sources: [{css: `
+    a {
+      border-color: var(--border-color);
+    }
+  `}],
+  mappings: {
+    "$value: var(--border-color)": "var(--border-color)",
+  },
+  expected: `
+    a {
+      border-color: var(--border-color);
     }
 `}));

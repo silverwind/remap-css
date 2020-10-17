@@ -263,8 +263,8 @@ function prepareMappings(mappings, names) {
       const value = key.substring("$box-shadow: ".length);
       const oldValue = (value.startsWith("$") ? value : normalizeColor(value)).toLowerCase();
       boxShadowMappings[oldValue] = newValue;
-    } else if (key.startsWith("$color: ")) {
-      const value = key.substring("$color: ".length);
+    } else if (key.startsWith("$value: ")) {
+      const value = key.substring("$value: ".length);
       const oldValue = (value.startsWith("$") ? value : normalizeColor(value)).toLowerCase();
       colorMappings[oldValue] = newValue;
     } else {
