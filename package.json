@@ -5,17 +5,12 @@
   "author": "silverwind",
   "repository": "silverwind/remap-css",
   "license": "BSD-2-Clause",
-  "main": "index.js",
   "engines": {
     "node": ">=10"
-  },
-  "scripts": {
-    "test": "make test"
   },
   "keywords": [
     "remap",
     "css",
-    "dark",
     "theme"
   ],
   "files": [
