@@ -143,6 +143,25 @@ const isColor = memo(value => {
   return false;
 });
 
+const rgbFunctions = new Set(["rgb", "rgba"]);
+const hslFunctions = new Set(["hsl", "hsla"]);
+
+function hexFromColorFunction(node) {
+  if (rgbFunctions.has(node.value)) {
+    const [r, g, b, a] = node.nodes.filter(node => node.type === "word").map(node => Number(node.value));
+    if (!r || !g || !b) return null;
+    return normalizeHexColor(`#${colorConvert.rgb.hex(r, g, b).toLowerCase()}${alphaToHex(a)}`);
+  } else if (hslFunctions.has(node.value)) {
+    let [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => String(node.value));
+    if (!h || !s || !l) return null;
+    h = Number(h);
+    s = Number(s.replace("%", ""));
+    l = Number(l.replace("%", ""));
+    return normalizeHexColor(`#${colorConvert.hsl.hex(h, s, l).toLowerCase()}${alphaToHex(a)}`);
+  }
+  return null;
+}
+
 const normalizeColor = memo(value => {
   value = value.toLowerCase();
 
@@ -164,16 +183,8 @@ const normalizeColor = memo(value => {
   const node = parsed.nodes[0];
 
   if (node && node.type === "function") {
-    if (["rgb", "rgba"].includes(node.value)) {
-      const [r, g, b, a] = node.nodes.filter(node => node.type === "word").map(node => Number(node.value));
-      value = normalizeHexColor(`#${colorConvert.rgb.hex(r, g, b).toLowerCase()}${alphaToHex(a)}`);
-    } else if (["hsl", "hsla"].includes(node.value)) {
-      let [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => String(node.value));
-      h = Number(h);
-      s = Number(s.replace("%", ""));
-      l = Number(l.replace("%", ""));
-      value = normalizeHexColor(`#${colorConvert.hsl.hex(h, s, l).toLowerCase()}${alphaToHex(a)}`);
-    }
+    const newValue = hexFromColorFunction(node);
+    if (newValue) value = newValue;
   }
 
   return value;

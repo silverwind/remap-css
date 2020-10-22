@@ -950,6 +950,7 @@ test("keep", makeTest({
       a {
         color: blue;
         background: radial-gradient(white 40%, transparent 40%) no-repeat;
+        border-color: rgb(var(--a), var(--b), var(--c));
       }
     }
   `}],
@@ -964,6 +965,7 @@ test("keep", makeTest({
       a {
         color: blue;
         background: radial-gradient(var(--border-color) 40%, transparent 40%) no-repeat;
+        border-color: rgb(var(--a), var(--b), var(--c));
       }
     }
 `}));
