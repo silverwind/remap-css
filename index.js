@@ -53,6 +53,10 @@ function getProperty(decl) {
   }
 }
 
+function isRootSelector(selector) {
+  return selector.startsWith("html") || selector.startsWith(":root");
+}
+
 function rewriteSelectors(selectors, opts, src) {
   const ret = [];
 
@@ -73,7 +77,7 @@ function rewriteSelectors(selectors, opts, src) {
       let skip = false;
       if (src.match) {
         for (const match of src.match) {
-          const first = selector.split(/\s+/)[0];
+          const [first] = selector.split(/\s+/);
           if ((/^[.#]+/.test(first) && first === match) || first.startsWith(match)) {
             skip = true;
             break;
@@ -87,9 +91,10 @@ function rewriteSelectors(selectors, opts, src) {
       }
 
       if (!skip) {
-        // incomplete check to avoid generating invalid "html :root" selectors
-        if (selector.startsWith(":root ") && src.prefix.startsWith("html")) {
-          selector = `${src.prefix} ${selector.substring(":root ".length)}`;
+        // try to join root selectors to avoid generating invalid "html :root"
+        const [first] = selector.split(/\s+/);
+        if (isRootSelector(first) && isRootSelector(src.prefix)) {
+          selector = `${src.prefix} ${selector.substring(first.length).trim()}`;
         } else {
           selector = `${src.prefix} ${selector}`;
         }
