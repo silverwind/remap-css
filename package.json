@@ -21,11 +21,11 @@
     "css-color-names": "1.0.1",
     "css-property-parser": "1.0.6",
     "css-shorthand-properties": "1.1.1",
-    "csstree-validator": "1.6.0",
+    "csstree-validator": "2.0.0",
     "known-css-properties": "0.20.0",
     "nano-memoize": "1.2.1",
     "perfectionist": "2.4.0",
-    "postcss": "8.1.6",
+    "postcss": "8.1.8",
     "postcss-discard-duplicates": "4.0.2",
     "postcss-discard-empty": "4.0.1",
     "postcss-discard-overridden": "4.0.1",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "eslint": "7.13.0",
-    "eslint-config-silverwind": "24.0.0",
+    "eslint-config-silverwind": "24.0.1",
     "jest": "26.6.3",
     "updates": "11.4.0",
     "versions": "8.4.3"

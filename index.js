@@ -318,7 +318,7 @@ const isValidDeclaration = memo((prop, value) => {
     value = usoVarToCssVar(value);
     const rule = `a{${prop}: ${value}}`;
     const result = csstreeValidator.validateString(rule);
-    const hadError = result["<unknown>"] && result["<unknown>"][0] && result["<unknown>"][0].error instanceof Error;
+    const hadError = result["<unknown>"] && result["<unknown>"][0] && result["<unknown>"][0] instanceof Error;
     return !hadError;
   } catch {
     return false;
