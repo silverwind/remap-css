@@ -1003,6 +1003,33 @@ test("css vars", makeTest({
     }
 `}));
 
+test("css vars 2", makeTest({
+  sources: [{css: `
+    :root {
+      --red: red;
+      --blue: blue;
+    }
+    a {
+      color: var(--red);
+    }
+    a.blue {
+      color: var(--blue);
+    }
+  `}],
+  mappings: {
+    "$value: red": "green",
+    "$value: blue": "yellow",
+  },
+  opts: {
+    validate: true,
+  },
+  expected: `
+    :root {
+      --red: green;
+      --blue: yellow;
+    }
+`}));
+
 test("invalid property - validate", makeTest({
   sources: [{css: `
     a {
