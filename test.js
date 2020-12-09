@@ -1086,3 +1086,18 @@ test("whitespace after uso var", makeTest({
       border-color: var(--border-color);
     }
 `}));
+
+test("whitespace after uso var", makeTest({
+  sources: [{css: `
+    html.octotree-gh[data-octotree-theme]:not([data-octotree-theme=sidebar]) main [style="background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));"] {
+      color: red;
+    }
+  `}],
+  mappings: {
+    "$value: red": "blue",
+  },
+  expected: `
+    html.octotree-gh[data-octotree-theme]:not([data-octotree-theme=sidebar]) main [style="background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));"] {
+      color: blue;
+    }
+`}));

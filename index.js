@@ -2,6 +2,7 @@
 
 const colorConvert = require("color-convert");
 const cssColorNames = require("css-color-names");
+const cssSelectorSplitter = require("css-selector-splitter");
 const csstreeValidator = require("csstree-validator");
 const knownCssProperties = require("known-css-properties");
 const memo = require("nano-memoize");
@@ -633,7 +634,7 @@ module.exports = async function remapCss(sources, mappings, opts = {}) {
   // wrap selector lists at lineLength
   output = output.replace(/^( *)(.+?) {/gm, (_, whitespace, content) => {
     let newContent = "";
-    const parts = content.split(", ").filter(p => !!p);
+    const parts = cssSelectorSplitter(content).filter(p => !!p);
     const lastIndex = parts.length - 1;
     for (const [index, part] of Object.entries(parts)) {
       const currentLength = /.*$/.exec(newContent)[0].length;
