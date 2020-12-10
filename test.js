@@ -1087,7 +1087,7 @@ test("whitespace after uso var", makeTest({
     }
 `}));
 
-test("whitespace after uso var", makeTest({
+test("selector split", makeTest({
   sources: [{css: `
     html.octotree-gh[data-octotree-theme]:not([data-octotree-theme=sidebar]) main [style="background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));"] {
       color: red;
