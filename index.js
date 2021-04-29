@@ -107,8 +107,12 @@ function rewriteSelectors(selectors, opts, src) {
         skip = true;
       }
 
-      if (!skip && !intersects) {
-        selector = `${src.prefix} ${selector}`;
+      if (!skip) {
+        if (intersects) {
+          selector = `${selector}${selector}`;
+        } else {
+          selector = `${src.prefix} ${selector}`;
+        }
       }
     }
 
