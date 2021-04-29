@@ -72,6 +72,10 @@ const selectorsIntersect = memo((a, b) => {
   }
 });
 
+function isRootSelector(selector) {
+  return selector.startsWith("html") || selector.startsWith(":root");
+}
+
 function rewriteSelectors(selectors, opts, src) {
   const ret = [];
 
@@ -108,7 +112,9 @@ function rewriteSelectors(selectors, opts, src) {
       }
 
       if (!skip) {
-        if (intersects) {
+        if (isRootSelector(first) && isRootSelector(src.prefix)) {
+          selector = `${src.prefix} ${selector.substring(first.length).trim()}`;
+        } else if (intersects) {
           selector = `${first}${selector}`;
         } else {
           selector = `${src.prefix} ${selector}`;
