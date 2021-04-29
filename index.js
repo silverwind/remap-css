@@ -109,7 +109,7 @@ function rewriteSelectors(selectors, opts, src) {
 
       if (!skip) {
         if (intersects) {
-          selector = `${selector}${selector}`;
+          selector = `${first}${selector}`;
         } else {
           selector = `${src.prefix} ${selector}`;
         }
