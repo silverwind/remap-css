@@ -21,6 +21,7 @@
     "css-color-names": "1.0.1",
     "css-property-parser": "1.0.6",
     "css-selector-splitter": "0.1.2",
+    "css-selector-tokenizer": "0.7.3",
     "css-shorthand-properties": "1.1.1",
     "csstree-validator": "2.0.1",
     "known-css-properties": "0.21.0",

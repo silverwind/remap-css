@@ -3,6 +3,7 @@
 const colorConvert = require("color-convert");
 const cssColorNames = require("css-color-names");
 const cssSelectorSplitter = require("css-selector-splitter");
+const cssSelectorTokenizer = require("css-selector-tokenizer");
 const csstreeValidator = require("csstree-validator");
 const knownCssProperties = require("known-css-properties");
 const memo = require("nano-memoize");
@@ -54,9 +55,22 @@ function getProperty(decl) {
   }
 }
 
-function isRootSelector(selector) {
-  return selector.startsWith("html") || selector.startsWith(":root");
-}
+const selectorsIntersect = memo((a, b) => {
+  try {
+    const {nodes: nodesA} = cssSelectorTokenizer.parse(a);
+    const {nodes: nodesB} = cssSelectorTokenizer.parse(b);
+
+    for (const a of nodesA[0].nodes) {
+      for (const b of nodesB[0].nodes) {
+        if (!a.type || !b.type || !a.name || !b.name) return false;
+        if (a.type === b.type && a.name === b.name) return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+});
 
 function rewriteSelectors(selectors, opts, src) {
   const ret = [];
@@ -75,13 +89,14 @@ function rewriteSelectors(selectors, opts, src) {
     // add prefix
     if (src.prefix) {
       // don't add whitespace after prefix if matches a selector in `match`
-      let matches = false;
+      let intersects = false;
       let skip = false;
+      const [first] = selector.split(/\s+/);
+
       if (src.match) {
         for (const match of src.match) {
-          const [first] = selector.split(/\s+/);
-          if ((/^[.#]+/.test(first) && first === match) || first.startsWith(match)) {
-            matches = true;
+          if (selectorsIntersect(first, match)) {
+            intersects = true;
             break;
           }
         }
@@ -92,10 +107,8 @@ function rewriteSelectors(selectors, opts, src) {
         skip = true;
       }
 
-      if (!skip) {
-        const [first] = selector.split(/\s+/);
-        const space = (isRootSelector(first) || matches) ? "" : " ";
-        selector = `${src.prefix}${space}${selector}`;
+      if (!skip && !intersects) {
+        selector = `${src.prefix} ${selector}`;
       }
     }
 
