@@ -93,7 +93,8 @@ function rewriteSelectors(selectors, opts, src) {
       }
 
       if (!skip) {
-        const space = (isRootSelector(selectors) || matches) ? "" : " ";
+        const [first] = selector.split(/\s+/);
+        const space = (isRootSelector(first) || matches) ? "" : " ";
         selector = `${src.prefix}${space}${selector}`;
       }
     }
