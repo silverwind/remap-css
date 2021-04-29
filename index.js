@@ -74,13 +74,14 @@ function rewriteSelectors(selectors, opts, src) {
 
     // add prefix
     if (src.prefix) {
-      // skip adding a prefix if it matches a selector in `match`
+      // don't add whitespace after prefix if matches a selector in `match`
+      let matches = false;
       let skip = false;
       if (src.match) {
         for (const match of src.match) {
           const [first] = selector.split(/\s+/);
           if ((/^[.#]+/.test(first) && first === match) || first.startsWith(match)) {
-            skip = true;
+            matches = true;
             break;
           }
         }
@@ -92,13 +93,8 @@ function rewriteSelectors(selectors, opts, src) {
       }
 
       if (!skip) {
-        // try to join root selectors to avoid generating invalid "html :root"
-        const [first] = selector.split(/\s+/);
-        if (isRootSelector(first) && isRootSelector(src.prefix)) {
-          selector = `${src.prefix} ${selector.substring(first.length).trim()}`;
-        } else {
-          selector = `${src.prefix} ${selector}`;
-        }
+        const space = (isRootSelector(selectors) || matches) ? "" : " ";
+        selector = `${src.prefix}${space}${selector}`;
       }
     }
 
