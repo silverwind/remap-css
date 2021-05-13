@@ -27,7 +27,7 @@
     "known-css-properties": "0.21.0",
     "nano-memoize": "1.2.1",
     "perfectionist": "2.4.0",
-    "postcss": "8.2.13",
+    "postcss": "8.2.15",
     "postcss-discard-duplicates": "5.0.0",
     "postcss-discard-empty": "5.0.0",
     "postcss-discard-overridden": "5.0.0",
@@ -39,10 +39,10 @@
     "split-string": "6.1.0"
   },
   "devDependencies": {
-    "eslint": "7.25.0",
-    "eslint-config-silverwind": "32.3.3",
+    "eslint": "7.26.0",
+    "eslint-config-silverwind": "33.0.0",
     "jest": "26.6.3",
-    "updates": "12.0.2",
+    "updates": "12.1.0",
     "versions": "8.4.7"
   },
   "jest": {
