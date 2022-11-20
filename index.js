@@ -2,7 +2,7 @@ import colorConvert from "color-convert";
 import cssColorNames from "css-color-names";
 import cssSelectorSplitter from "css-selector-splitter";
 import cssSelectorTokenizer from "css-selector-tokenizer";
-import csstreeValidator from "csstree-validator";
+import {validate} from "csstree-validator";
 import knownCssProperties from "known-css-properties";
 import memo from "nano-memoize";
 import perfectionist from "perfectionist";
@@ -331,10 +331,7 @@ const isValidDeclaration = memo((prop, value) => {
 
   try {
     value = usoVarToCssVar(value);
-    const rule = `a{${prop}: ${value}}`;
-    const result = csstreeValidator.validateString(rule);
-    const hadError = result["<unknown>"] && result["<unknown>"][0] && result["<unknown>"][0] instanceof Error;
-    return !hadError;
+    return !(validate(`a{${prop}: ${value}}`)).length;
   } catch {
     return false;
   }
