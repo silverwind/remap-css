@@ -1,7 +1,5 @@
-.vscode/
-node_modules
-npm-debug.log*
-package-lock.json
-try.js
-yarn-error.log
-.DS_Store
+/.vscode
+/node_modules
+/npm-debug.log*
+/yarn-error.log
+/yarn.lock

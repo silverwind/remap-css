@@ -1,25 +1,23 @@
-"use strict";
-
-const colorConvert = require("color-convert");
-const cssColorNames = require("css-color-names");
-const cssSelectorSplitter = require("css-selector-splitter");
-const cssSelectorTokenizer = require("css-selector-tokenizer");
-const csstreeValidator = require("csstree-validator");
-const knownCssProperties = require("known-css-properties");
-const memo = require("nano-memoize");
-const perfectionist = require("perfectionist");
-const postcss = require("postcss");
-const postcssDiscardDuplicates = require("postcss-discard-duplicates");
-const postcssDiscardEmpty = require("postcss-discard-empty");
-const postcssDiscardOverridden = require("postcss-discard-overridden");
-const postcssMergeLonghand = require("postcss-merge-longhand");
-const postcssMergeRules = require("postcss-merge-rules");
-const postcssSafeParser = require("postcss-safe-parser");
-const postcssUniqueSelectors = require("postcss-unique-selectors");
-const postcssValueParser = require("postcss-value-parser");
-const splitString = require("split-string");
-const {expandShorthandProperty} = require("css-property-parser");
-const {isShorthand} = require("css-shorthand-properties");
+import colorConvert from "color-convert";
+import cssColorNames from "css-color-names";
+import cssSelectorSplitter from "css-selector-splitter";
+import cssSelectorTokenizer from "css-selector-tokenizer";
+import csstreeValidator from "csstree-validator";
+import knownCssProperties from "known-css-properties";
+import memo from "nano-memoize";
+import perfectionist from "perfectionist";
+import postcss from "postcss";
+import postcssDiscardDuplicates from "postcss-discard-duplicates";
+import postcssDiscardEmpty from "postcss-discard-empty";
+import postcssDiscardOverridden from "postcss-discard-overridden";
+import postcssMergeLonghand from "postcss-merge-longhand";
+import postcssMergeRules from "postcss-merge-rules";
+import postcssSafeParser from "postcss-safe-parser";
+import postcssUniqueSelectors from "postcss-unique-selectors";
+import postcssValueParser from "postcss-value-parser";
+import splitString from "split-string";
+import {expandShorthandProperty} from "css-property-parser";
+import {isShorthand} from "css-shorthand-properties";
 
 const defaults = {
   indentSize: 2,
@@ -613,7 +611,7 @@ async function format(css, opts) {
   })).css;
 }
 
-module.exports = async function remapCss(sources, mappings, opts = {}) {
+export default async function remapCss(sources, mappings, opts = {}) {
   opts = Object.assign({}, defaults, opts);
 
   const names = {};

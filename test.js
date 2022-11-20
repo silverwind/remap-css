@@ -1,6 +1,4 @@
-"use strict";
-
-const remapCss = require(".");
+import remapCss from "./index.js";
 
 function unintend(str) {
   str = str.replace(/^\n/, "").replace(/\n +$/g, "\n");
