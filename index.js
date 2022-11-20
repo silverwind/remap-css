@@ -39,10 +39,6 @@ const uniq = arr => Array.from(new Set(arr));
 const varRe = /var\(--(?!uso-var-expanded).+?\)/;
 const knownProperties = new Set(knownCssProperties.all);
 
-function srcName(src, index) {
-  return src.name || `${prefix}${index}`;
-}
-
 // https://github.com/postcss/postcss/issues/1426
 function getProperty(decl) {
   const before = decl.raws && decl.raws.before && decl.raws.before.trim();
@@ -137,7 +133,7 @@ const normalizeHexColor = memo(value => {
 });
 
 const alphaToHex = memo(alpha => {
-  if (!alpha === undefined) return "";
+  if (alpha === undefined) return "";
   if (alpha > 1) alpha = 1;
   if (alpha < 0) alpha = 0;
   return Math.floor(alpha * 255).toString(16).padStart(2, "0");
@@ -251,7 +247,7 @@ const parseDecl = memo((declString) => {
     const important = parts[parts.length - 1].toLowerCase() === "!important";
     if (important) parts.pop();
     const prop = parts.shift().trim();
-    const value = parts.join().trim();
+    const value = parts.join(",").trim();
     ret.push(normalizeDecl({prop, value, important}));
   }
   return ret;
@@ -454,7 +450,7 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, boxSha
 }
 
 const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings, names, index, opts) => {
-  const commentStart = srcName(src, index, opts);
+  const commentStart = src.name || `${prefix}${index}`;
 
   return {
     postcssPlugin: "remap-css",
@@ -612,7 +608,7 @@ async function format(css, opts) {
 }
 
 export default async function remapCss(sources, mappings, opts = {}) {
-  opts = Object.assign({}, defaults, opts);
+  opts = {...defaults, ...opts};
 
   const names = {};
   const [declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings] = prepareMappings(mappings, names);
@@ -652,7 +648,7 @@ export default async function remapCss(sources, mappings, opts = {}) {
   // wrap selector lists at lineLength
   output = output.replace(/^( *)(.+?) {/gm, (_, whitespace, content) => {
     let newContent = "";
-    const parts = cssSelectorSplitter(content).filter(p => !!p);
+    const parts = cssSelectorSplitter(content).filter(Boolean);
     const lastIndex = parts.length - 1;
     for (const [index, part] of Object.entries(parts)) {
       const currentLength = /.*$/.exec(newContent)[0].length;
@@ -684,4 +680,4 @@ export default async function remapCss(sources, mappings, opts = {}) {
   }
 
   return output;
-};
+}

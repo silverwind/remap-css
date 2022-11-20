@@ -9,7 +9,7 @@ npm i remap-css
 ```
 
 ```js
-const remapCss = require("remap-css");
+import remapCss from "remap-css";
 
 const css = await remapCss([{
   css: `

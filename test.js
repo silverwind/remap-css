@@ -4,7 +4,7 @@ function unintend(str) {
   str = str.replace(/^\n/, "").replace(/\n +$/g, "\n");
   const indent = (/^ +/.exec(str.split(/\n/)[0]) || [[]])[0].length;
   const re = new RegExp(`^ {${indent}}`);
-  str = str.split(/\n/).filter(l => !!l).map(line => line.replace(re, "")).join("\n");
+  str = str.split(/\n/).filter(Boolean).map(line => line.replace(re, "")).join("\n");
   return str;
 }
 
