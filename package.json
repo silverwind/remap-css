@@ -15,7 +15,6 @@
   ],
   "dependencies": {
     "color-convert": "2.0.1",
-    "css-color-names": "1.0.1",
     "css-property-parser": "1.0.6",
     "css-selector-splitter": "0.1.2",
     "css-selector-tokenizer": "0.8.0",
