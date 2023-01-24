@@ -23,7 +23,7 @@
     "known-css-properties": "0.26.0",
     "nano-memoize": "2.0.0",
     "perfectionist": "2.4.0",
-    "postcss": "8.4.20",
+    "postcss": "8.4.21",
     "postcss-discard-duplicates": "5.1.0",
     "postcss-discard-empty": "5.1.1",
     "postcss-discard-overridden": "5.1.0",
@@ -35,11 +35,11 @@
     "split-string": "6.1.0"
   },
   "devDependencies": {
-    "eslint": "8.30.0",
-    "eslint-config-silverwind": "65.0.0",
-    "updates": "13.2.6",
+    "eslint": "8.32.0",
+    "eslint-config-silverwind": "65.1.0",
+    "updates": "13.2.8",
     "versions": "10.4.1",
-    "vite": "4.0.3",
-    "vitest": "0.26.2"
+    "vite": "4.0.4",
+    "vitest": "0.28.1"
   }
 }
