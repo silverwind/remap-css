@@ -2,7 +2,6 @@ import {defineConfig} from "vitest/dist/config.js";
 
 export default defineConfig({
   test: {
-    include: ["**/test.js", "**/*.test.js"],
     environment: "node",
     testTimeout: 20000,
     open: false,
@@ -11,8 +10,5 @@ export default defineConfig({
     globals: true,
     watch: false,
     outputDiffLines: Infinity,
-    outputDiffMaxLines: Infinity,
-    outputDiffMaxSize: Infinity,
-    outputTruncateLength: Infinity,
   },
 });
