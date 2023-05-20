@@ -475,7 +475,7 @@ const cssVarToUsoVars = memo(value => {
 });
 
 const isValidDeclaration = memo((prop, value) => {
-  if (!knownProperties.has(prop) && !/^--./i.test(prop)) {
+  if (!knownProperties.has(prop) && !/^--./.test(prop)) {
     return false;
   }
 
@@ -816,7 +816,7 @@ export default async function remapCss(sources, mappings, opts = {}) {
   output = output.replace(/\n{2,}/g, "\n").trim();
 
   // remove obsolete comments
-  output = output.replace(/\* .+\/[\n ]\//gm, "");
+  output = output.replace(/\* .+\/[\n ]\//g, "");
 
   // restore uso vars
   output = cssVarToUsoVars(output);
