@@ -1,6 +1,6 @@
 {
   "name": "remap-css",
-  "version": "7.0.1",
+  "version": "7.0.2",
   "description": "Remap CSS rules based on declaration value",
   "author": "silverwind",
   "repository": "silverwind/remap-css",
