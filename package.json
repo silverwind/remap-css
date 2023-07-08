@@ -21,9 +21,9 @@
     "css-shorthand-properties": "1.1.1",
     "csstree-validator": "3.0.0",
     "known-css-properties": "0.27.0",
-    "nano-memoize": "3.0.11",
+    "memize": "2.1.0",
     "perfectionist": "2.4.0",
-    "postcss": "8.4.23",
+    "postcss": "8.4.25",
     "postcss-discard-duplicates": "6.0.0",
     "postcss-discard-empty": "6.0.0",
     "postcss-discard-overridden": "6.0.0",
@@ -35,11 +35,12 @@
     "split-string": "6.1.0"
   },
   "devDependencies": {
-    "eslint": "8.41.0",
-    "eslint-config-silverwind": "73.0.0",
-    "updates": "14.1.0",
-    "versions": "11.0.0",
-    "vite": "4.3.8",
-    "vitest": "0.31.1"
+    "eslint": "8.44.0",
+    "eslint-config-silverwind": "73.1.2",
+    "updates": "14.3.2",
+    "versions": "11.0.1",
+    "vite": "4.4.2",
+    "vitest": "0.33.0",
+    "vitest-config-silverwind": "2.1.0"
   }
 }

@@ -3,7 +3,7 @@ import cssSelectorSplitter from "css-selector-splitter";
 import cssSelectorTokenizer from "css-selector-tokenizer";
 import {validate} from "csstree-validator";
 import knownCssProperties from "known-css-properties";
-import memo from "nano-memoize";
+import memize from "memize";
 import perfectionist from "perfectionist";
 import postcss from "postcss";
 import postcssDiscardDuplicates from "postcss-discard-duplicates";
@@ -182,8 +182,8 @@ const defaults = {
 
 const prefix = "source #";
 const atRulesWithNoSelectors = new Set(["keyframes"]);
-const splitDecls = memo(str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
-const splitSelectors = memo(str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
+const splitDecls = memize(str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
+const splitSelectors = memize(str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
 const joinSelectors = selectors => selectors.join(", ");
 const uniq = arr => Array.from(new Set(arr));
 const varRe = /var\(--(?!uso-var-expanded).+?\)/;
@@ -199,7 +199,7 @@ function getProperty(decl) {
   }
 }
 
-const selectorsIntersect = memo((a, b) => {
+const selectorsIntersect = memize((a, b) => {
   try {
     const {nodes: nodesA} = cssSelectorTokenizer.parse(a);
     const {nodes: nodesB} = cssSelectorTokenizer.parse(b);
@@ -272,7 +272,7 @@ function rewriteSelectors(selectors, opts, src) {
   return ret;
 }
 
-const normalizeHexColor = memo(value => {
+const normalizeHexColor = memize(value => {
   if ([4, 5].includes(value.length)) {
     const [h, r, g, b, a] = value;
     return `${h}${r}${r}${g}${g}${b}${b}${a || "f"}${a || "f"}`;
@@ -282,7 +282,7 @@ const normalizeHexColor = memo(value => {
   return value;
 });
 
-const alphaToHex = memo(alpha => {
+const alphaToHex = memize(alpha => {
   if (alpha === undefined) return "";
   if (alpha > 1) alpha = 1;
   if (alpha < 0) alpha = 0;
@@ -299,7 +299,7 @@ const cssValueKeywords = new Set([
   "unset",
 ]);
 
-const isColor = memo(value => {
+const isColor = memize(value => {
   value = value.toLowerCase();
   if (cssColorNames[value]) return true;
   if (cssValueKeywords.has(value)) return true;
@@ -332,7 +332,7 @@ function hexFromColorFunction(node) {
   return null;
 }
 
-const normalizeColor = memo(value => {
+const normalizeColor = memize(value => {
   value = value.toLowerCase();
 
   if (value in cssColorNames) {
@@ -388,7 +388,7 @@ function normalizeDecl({prop, raws, value, important}) {
 }
 
 // returns an array of declarations
-const parseDecl = memo((declString) => {
+const parseDecl = memize((declString) => {
   declString = declString.trim().replace(/;+$/, "").trim();
 
   const ret = [];
@@ -466,15 +466,15 @@ function hasDeclarations(root) {
   return false;
 }
 
-const usoVarToCssVar = memo(value => {
+const usoVarToCssVar = memize(value => {
   return value.replace(/\/\*\[\[(.+?)\]\]\*\//g, (_, name) => `var(--uso-var-expanded-${name})`);
 });
 
-const cssVarToUsoVars = memo(value => {
+const cssVarToUsoVars = memize(value => {
   return value.replace(/var\(--(uso-var-expanded-)(.+?)\)/g, (_, _prefix, name) => `/*[[${name}]]*/`);
 });
 
-const isValidDeclaration = memo((prop, value) => {
+const isValidDeclaration = memize((prop, value) => {
   if (!knownProperties.has(prop) && !/^--./.test(prop)) {
     return false;
   }
@@ -495,7 +495,7 @@ function makeComment(text) {
   });
 }
 
-const assignNewColor = memo((normalizedColor, newValue) => {
+const assignNewColor = memize((normalizedColor, newValue) => {
   if (newValue === "$invert") {
     let [_, r, g, b, a] = /^#(..)(..)(..)(..)$/.exec(normalizedColor);
     r = (255 - parseInt(r, 16)).toString(16).padStart(2, "0");
