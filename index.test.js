@@ -306,7 +306,7 @@ test("duplicate props", makeTest({
     }
 `}));
 
-test("duplicate props", makeTest({
+test("duplicate props 2", makeTest({
   sources: [{css: `
     .link-mktg:hover {
       color: #0366d6;
@@ -397,7 +397,7 @@ test("$value in gradient rgb", makeTest({
   }
 `}));
 
-test("$value in gradient rgb", makeTest({
+test("$value in gradient rgb 2", makeTest({
   sources: [{css: `
     a:hover {
       background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
@@ -617,7 +617,7 @@ test("border 2", makeTest({
     }
 `}));
 
-test("border 2", makeTest({
+test("border 3", makeTest({
   sources: [{css: `
     a {
       border:1px solid red;
@@ -632,7 +632,7 @@ test("border 2", makeTest({
     }
 `}));
 
-test("border 3", makeTest({
+test("border 4", makeTest({
   sources: [{css: `
     @media (min-width:544px) {
       a {
@@ -651,7 +651,7 @@ test("border 3", makeTest({
     }
 `}));
 
-test("border 4", makeTest({
+test("border 5", makeTest({
   sources: [{css: `
     @media (min-width:544px) {
       a {
@@ -1070,7 +1070,7 @@ test("invalid property - no validate", makeTest({
     }
 `}));
 
-test("whitespace after uso var", makeTest({
+test("whitespace after uso var 2", makeTest({
   sources: [{css: `
     a {
       border-color: var(--border-color);
