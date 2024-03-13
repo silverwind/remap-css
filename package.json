@@ -8,7 +8,7 @@
   "exports": "./index.js",
   "license": "BSD-2-Clause",
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "files": [
     "index.js"
