@@ -7,6 +7,7 @@
   "type": "module",
   "exports": "./index.js",
   "license": "BSD-2-Clause",
+  "packageManager": "pnpm@10.28.2",
   "engines": {
     "node": ">=18"
   },
