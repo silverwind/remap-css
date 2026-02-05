@@ -574,7 +574,7 @@ function checkNode(node, prop, normalizedValue, oldColors, colorMappings, border
 
 function replaceColorsInValue(prop, value, colorMappings, borderMappings, boxShadowMappings, backgroundMappings) {
   const {nodes} = postcssValueParser(value);
-  const oldColors = new Set([]);
+  const oldColors = new Set();
   let replaced = false;
 
   postcssValueParser.walk(nodes, node => {
