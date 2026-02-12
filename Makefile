@@ -16,7 +16,7 @@ test: lint node_modules
 .PHONY: publish
 publish: node_modules
 	git push -u --tags origin master
-	pnpm publish
+	pnpm publish --no-git-checks
 
 .PHONY: update
 update: node_modules
