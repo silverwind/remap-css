@@ -498,9 +498,9 @@ function makeComment(text) {
 const assignNewColor = memize((normalizedColor, newValue) => {
   if (newValue === "$invert") {
     let [_, r, g, b, a] = /^#(..)(..)(..)(..)$/.exec(normalizedColor);
-    r = (255 - parseInt(r, 16)).toString(16).padStart(2, "0");
-    g = (255 - parseInt(g, 16)).toString(16).padStart(2, "0");
-    b = (255 - parseInt(b, 16)).toString(16).padStart(2, "0");
+    r = (255 - Number.parseInt(r, 16)).toString(16).padStart(2, "0");
+    g = (255 - Number.parseInt(g, 16)).toString(16).padStart(2, "0");
+    b = (255 - Number.parseInt(b, 16)).toString(16).padStart(2, "0");
     return `#${r}${g}${b}${a}`;
   } else {
     return newValue;
@@ -793,7 +793,7 @@ export default async function remapCss(sources, mappings, opts = {}) {
   output = output.replace(/,\n( *)/g, (_, m1) => `,${m1.trim()} `);
 
   // wrap selector lists at lineLength
-  output = output.replace(/^( *)(.+?) {/gm, (_, whitespace, content) => {
+  output = output.replace(/^( *)(\S.+?) {/gm, (_, whitespace, content) => {
     let newContent = "";
     const parts = cssSelectorSplitter(content).filter(Boolean);
     const lastIndex = parts.length - 1;
