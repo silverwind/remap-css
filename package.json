@@ -5,6 +5,7 @@
   "author": "silverwind",
   "repository": "silverwind/remap-css",
   "type": "module",
+  "sideEffects": false,
   "exports": "./index.js",
   "license": "BSD-2-Clause",
   "packageManager": "pnpm@10.30.3",
