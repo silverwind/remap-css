@@ -82,8 +82,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3(prettier@3.8.1)
       versions:
-        specifier: 14.2.1
-        version: 14.2.1
+        specifier: 14.3.1
+        version: 14.3.1
       vite:
         specifier: 7.3.1
         version: 7.3.1(jiti@2.6.1)
@@ -1485,8 +1485,8 @@ packages:
   vendors@1.0.4:
     resolution: {integrity: sha512-/juG65kTL4Cy2su4P8HjtkTxk6VmJDiOPBufWniqQ6wknac6jNiXS9vU+hO3wgusiyqWlzTbVHi0dyJqRONg3w==}
 
-  versions@14.2.1:
-    resolution: {integrity: sha512-lur2Vj4eQ0wZN+d2iWQWUCwtyKZxkIHr5/TmsY5s/g5l0K4xGOV3aDgxOdJ+5xBEfDUzNNtQKz0ZQHXX1wfnnQ==}
+  versions@14.3.1:
+    resolution: {integrity: sha512-goCSxgrE0dWs1lOBgvdfQEaSYHlY9ogHofsAZ9KLTp10uvkm/TlZY4/I7cl2/n80tmZFSCcnhfhlE+9CEuTrcg==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -2833,7 +2833,7 @@ snapshots:
 
   vendors@1.0.4: {}
 
-  versions@14.2.1: {}
+  versions@14.3.1: {}
 
   vite@7.3.1(jiti@2.6.1):
     dependencies:
