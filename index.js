@@ -692,7 +692,7 @@ const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappi
               }
             }
 
-            if (node.selector && !(node.parent && node.parent.type === "atrule" && atRulesWithNoSelectors.has(node.parent.name))) {
+            if (node.selector && (!node.parent || node.parent.type !== "atrule" || !atRulesWithNoSelectors.has(node.parent.name))) {
               node.selector = joinSelectors(newSelectors);
             }
           } else {
@@ -787,13 +787,13 @@ export default async function remapCss(sources, mappings, opts = {}) {
   output = await format(output, opts);
 
   // move comments to their own line
-  output = output.replace(/} \/\*/g, "}\n/*");
+  output = output.replace(/\} \/\*/g, "}\n/*");
 
   // put selectors on the same line
   output = output.replace(/,\n( *)/g, (_, m1) => `,${m1.trim()} `);
 
   // wrap selector lists at lineLength
-  output = output.replace(/^( *)(\S.+?) {/gm, (_, whitespace, content) => {
+  output = output.replace(/^( *)(\S.+?) \{/gm, (_, whitespace, content) => {
     let newContent = "";
     const parts = cssSelectorSplitter(content).filter(Boolean);
     const lastIndex = parts.length - 1;
