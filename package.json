@@ -8,7 +8,7 @@
   "sideEffects": false,
   "exports": "./index.js",
   "license": "BSD-2-Clause",
-  "packageManager": "pnpm@10.30.3",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=18"
   },
@@ -25,26 +25,26 @@
     "known-css-properties": "0.37.0",
     "memize": "2.1.1",
     "perfectionist": "2.4.0",
-    "postcss": "8.5.8",
+    "postcss": "8.5.9",
     "postcss-discard-duplicates": "7.0.2",
     "postcss-discard-empty": "7.0.1",
     "postcss-discard-overridden": "7.0.1",
     "postcss-merge-longhand": "7.0.5",
-    "postcss-merge-rules": "7.0.7",
+    "postcss-merge-rules": "7.0.8",
     "postcss-safe-parser": "7.0.1",
-    "postcss-unique-selectors": "7.0.4",
+    "postcss-unique-selectors": "7.0.5",
     "postcss-value-parser": "4.2.0",
     "split-string": "6.1.0"
   },
   "devDependencies": {
-    "eslint": "9.39.3",
-    "eslint-config-silverwind": "122.0.4",
-    "typescript-config-silverwind": "15.0.0",
-    "updates": "17.8.2",
-    "updates-config-silverwind": "1.0.3",
+    "eslint": "9.39.4",
+    "eslint-config-silverwind": "131.0.4",
+    "typescript-config-silverwind": "17.0.0",
+    "updates": "17.15.2",
+    "updates-config-silverwind": "2.1.0",
     "versions": "14.3.1",
-    "vite": "7.3.1",
-    "vitest": "4.0.18",
-    "vitest-config-silverwind": "10.6.3"
+    "vite": "8.0.8",
+    "vitest": "4.1.4",
+    "vitest-config-silverwind": "11.1.4"
   }
 }
