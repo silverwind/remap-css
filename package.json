@@ -10,7 +10,7 @@
   "license": "BSD-2-Clause",
   "packageManager": "pnpm@10.33.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "files": [
     "index.js"
@@ -42,7 +42,7 @@
     "jest-extended": "7.0.0",
     "typescript-config-silverwind": "17.0.0",
     "updates": "17.15.2",
-    "updates-config-silverwind": "2.1.0",
+    "updates-config-silverwind": "3.0.0",
     "versions": "15.0.0",
     "vite": "8.0.8",
     "vitest": "4.1.4",
