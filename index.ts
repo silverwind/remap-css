@@ -17,8 +17,10 @@ import postcssValueParser from "postcss-value-parser";
 import splitString from "split-string";
 import {expandShorthandProperty} from "css-property-parser";
 import {isShorthand} from "css-shorthand-properties";
+import type {AtRule, ChildNode, Comment, Declaration, Plugin} from "postcss";
+import type {ValueNode} from "postcss-value-parser";
 
-const cssColorNames = {
+const cssColorNames: Record<string, string> = {
   "aliceblue": "#f0f8ff",
   "antiquewhite": "#faebd7",
   "aqua": "#00ffff",
@@ -166,10 +168,57 @@ const cssColorNames = {
   "white": "#ffffff",
   "whitesmoke": "#f5f5f5",
   "yellow": "#ffff00",
-  "yellowgreen": "#9acd32"
+  "yellowgreen": "#9acd32",
 };
 
-const defaults = {
+/** A CSS source to remap. */
+export type Source = {
+  /** A CSS string. */
+  css: string,
+  /** A CSS selector to be prefixed to all output rules. */
+  prefix?: string,
+  /** An array of plain CSS selectors that prevent a prefix addition on exact match. */
+  match?: Array<string>,
+  /** Optional name used in comments. */
+  name?: string,
+};
+
+/** Options for `remapCss`. */
+export type Options = {
+  /** Number of spaces to indent rules and declarations. Default: `2`. */
+  indentSize?: number,
+  /** Number of spaces to indent the output. Default: `0`. */
+  indentCss?: number,
+  /** Number of characters after which to wrap lines. Default: `80`. */
+  lineLength?: number,
+  /** Regular expressions of selectors to ignore. Default: `[]`. */
+  ignoreSelectors?: Array<RegExp>,
+  /** Whether to output comments. Default: `false`. */
+  comments?: boolean,
+  /** Whether to perform stylistic tweaks on selectors. Default: `false`. */
+  stylistic?: boolean,
+  /** Validate properties and discard ones that fail. Default: `false`. */
+  validate?: boolean,
+  /** Retain non-matching declarations in the output. Default: `false`. */
+  keep?: boolean,
+};
+
+type ResolvedOptions = Required<Options>;
+
+/** A parsed declaration with normalized property and value. */
+type Decl = {
+  prop: string,
+  value: string,
+  important: boolean,
+  origValue?: string,
+};
+
+/** Maps a normalized declaration string to its replacement declarations. */
+type DeclMappings = Record<string, Array<Decl>>;
+/** Maps a normalized color value to its replacement value. */
+type ColorMappings = Record<string, string>;
+
+const defaults: ResolvedOptions = {
   indentSize: 2,
   indentCss: 0,
   lineLength: 80,
@@ -182,16 +231,16 @@ const defaults = {
 
 const prefix = "source #";
 const atRulesWithNoSelectors = new Set(["keyframes"]);
-const splitDecls = memize(str => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
-const splitSelectors = memize(str => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
-const joinSelectors = selectors => selectors.join(", ");
-const uniq = arr => Array.from(new Set(arr));
+const splitDecls = memize((str: string) => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
+const splitSelectors = memize((str: string) => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
+const joinSelectors = (selectors: Array<string>) => selectors.join(", ");
+const uniq = (arr: Array<string | Array<string>>) => Array.from(new Set(arr));
 const varRe = /var\(--(?!uso-var-expanded).+?\)/;
 const knownProperties = new Set(knownCssProperties.all);
 
 // https://github.com/postcss/postcss/issues/1426
-function getProperty(decl) {
-  const before = decl.raws && decl.raws.before && decl.raws.before.trim();
+function getProperty(decl: {prop: string, raws?: {before?: string}}): string {
+  const before = decl.raws?.before?.trim();
   if (before === "*" || before === "_") {
     return `${before}${decl.prop}`;
   } else {
@@ -199,7 +248,7 @@ function getProperty(decl) {
   }
 }
 
-const selectorsIntersect = memize((a, b) => {
+const selectorsIntersect = memize((a: string, b: string): boolean => {
   try {
     const {nodes: nodesA} = cssSelectorTokenizer.parse(a);
     const {nodes: nodesB} = cssSelectorTokenizer.parse(b);
@@ -216,12 +265,12 @@ const selectorsIntersect = memize((a, b) => {
   }
 });
 
-function isRootSelector(selector) {
+function isRootSelector(selector: string): boolean {
   return selector.startsWith("html") || selector.startsWith(":root");
 }
 
-function rewriteSelectors(selectors, opts, src) {
-  const ret = [];
+function rewriteSelectors(selectors: Array<string>, opts: ResolvedOptions, src: Source): Array<string> {
+  const ret: Array<string> = [];
 
   for (let selector of selectors) {
     if (opts.stylistic) {
@@ -272,7 +321,7 @@ function rewriteSelectors(selectors, opts, src) {
   return ret;
 }
 
-const normalizeHexColor = memize(value => {
+const normalizeHexColor = memize((value: string): string => {
   if ([4, 5].includes(value.length)) {
     const [h, r, g, b, a] = value;
     return `${h}${r}${r}${g}${g}${b}${b}${a || "f"}${a || "f"}`;
@@ -282,11 +331,12 @@ const normalizeHexColor = memize(value => {
   return value;
 });
 
-const alphaToHex = memize(alpha => {
+const alphaToHex = memize((alpha: number | string | undefined): string => {
   if (alpha === undefined) return "";
-  if (alpha > 1) alpha = 1;
-  if (alpha < 0) alpha = 0;
-  return Math.floor(alpha * 255).toString(16).padStart(2, "0");
+  let value = Number(alpha);
+  if (value > 1) value = 1;
+  if (value < 0) value = 0;
+  return Math.floor(value * 255).toString(16).padStart(2, "0");
 });
 
 const cssValueKeywords = new Set([
@@ -299,7 +349,7 @@ const cssValueKeywords = new Set([
   "unset",
 ]);
 
-const isColor = memize(value => {
+const isColor = memize((value: string): boolean => {
   value = value.toLowerCase();
   if (cssColorNames[value]) return true;
   if (cssValueKeywords.has(value)) return true;
@@ -316,23 +366,23 @@ const isColor = memize(value => {
 const rgbFunctions = new Set(["rgb", "rgba"]);
 const hslFunctions = new Set(["hsl", "hsla"]);
 
-function hexFromColorFunction(node) {
+function hexFromColorFunction(node: ValueNode): string | null {
   if (rgbFunctions.has(node.value)) {
     const [r, g, b, a] = node.nodes.filter(node => node.type === "word").map(node => Number(node.value));
     if (!r || !g || !b) return null;
     return normalizeHexColor(`#${colorConvert.rgb.hex(r, g, b).toLowerCase()}${alphaToHex(a)}`);
   } else if (hslFunctions.has(node.value)) {
-    let [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => String(node.value));
+    const [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => String(node.value));
     if (!h || !s || !l) return null;
-    h = Number(h);
-    s = Number(s.replace("%", ""));
-    l = Number(l.replace("%", ""));
-    return normalizeHexColor(`#${colorConvert.hsl.hex(h, s, l).toLowerCase()}${alphaToHex(a)}`);
+    const hNum = Number(h);
+    const sNum = Number(s.replace("%", ""));
+    const lNum = Number(l.replace("%", ""));
+    return normalizeHexColor(`#${colorConvert.hsl.hex(hNum, sNum, lNum).toLowerCase()}${alphaToHex(a)}`);
   }
   return null;
 }
 
-const normalizeColor = memize(value => {
+const normalizeColor = memize((value: string): string => {
   value = value.toLowerCase();
 
   if (value in cssColorNames) {
@@ -360,7 +410,7 @@ const normalizeColor = memize(value => {
   return value;
 });
 
-function normalizeDecl({prop, raws, value, important}) {
+function normalizeDecl({prop, raws, value, important}: {prop: string, raws?: {before?: string}, value: string, important?: boolean}): Decl {
   prop = getProperty({prop, raws}).toLowerCase();
 
   const origValue = value;
@@ -384,31 +434,31 @@ function normalizeDecl({prop, raws, value, important}) {
     value = value.split(" ").sort().join(" ");
   }
 
-  return {prop, value, important, origValue};
+  return {prop, value, important: Boolean(important), origValue};
 }
 
 // returns an array of declarations
-const parseDecl = memize((declString) => {
+const parseDecl = memize((declString: string): Array<Decl> => {
   declString = declString.trim().replace(/;+$/, "").trim();
 
-  const ret = [];
+  const ret: Array<Decl> = [];
   for (const str of splitDecls(declString)) {
     const parts = str.split(":");
     const important = parts[parts.length - 1].toLowerCase() === "!important";
     if (important) parts.pop();
-    const prop = parts.shift().trim();
+    const prop = parts.shift()!.trim();
     const value = parts.join(",").trim();
     ret.push(normalizeDecl({prop, value, important}));
   }
   return ret;
 });
 
-function stringifyDecl(decl) {
+function stringifyDecl(decl: {prop: string, raws?: {before?: string}, value: string, important?: boolean}): string {
   const {prop, value, important} = normalizeDecl(decl);
   return `${prop}: ${value}${important ? " !important" : ""}`;
 }
 
-function addMapping(mappings, names, fromStringDecl, toStringDecl) {
+function addMapping(mappings: DeclMappings, names: Record<string, string>, fromStringDecl: string, toStringDecl: string): void {
   const fromDecl = parseDecl(fromStringDecl)[0]; // can only be single declaration
   const toDecl = parseDecl(toStringDecl);
   if (!toStringDecl) return;
@@ -424,12 +474,12 @@ function addMapping(mappings, names, fromStringDecl, toStringDecl) {
   }
 }
 
-function prepareMappings(mappings, names) {
-  const declMappings = {};
-  const colorMappings = {};
-  const borderMappings = {};
-  const boxShadowMappings = {};
-  const backgroundMappings = {};
+function prepareMappings(mappings: Record<string, string>, names: Record<string, string>): [DeclMappings, ColorMappings, ColorMappings, ColorMappings, ColorMappings] {
+  const declMappings: DeclMappings = {};
+  const colorMappings: ColorMappings = {};
+  const borderMappings: ColorMappings = {};
+  const boxShadowMappings: ColorMappings = {};
+  const backgroundMappings: ColorMappings = {};
 
   for (const [key, newValue] of Object.entries(mappings)) {
     if (key.startsWith("$border: ")) {
@@ -456,25 +506,26 @@ function prepareMappings(mappings, names) {
   return [declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings];
 }
 
-function hasDeclarations(root) {
+function hasDeclarations(root: ChildNode): boolean {
   if (root.type === "decl") return true;
-  if (!root.nodes || !root.nodes.length) return false;
-  for (const node of root.nodes || []) {
+  const nodes = "nodes" in root ? root.nodes : undefined;
+  if (!nodes || !nodes.length) return false;
+  for (const node of nodes) {
     if (hasDeclarations(node)) return true;
   }
 
   return false;
 }
 
-const usoVarToCssVar = memize(value => {
+const usoVarToCssVar = memize((value: string): string => {
   return value.replace(/\/\*\[\[(.+?)\]\]\*\//g, (_, name) => `var(--uso-var-expanded-${name})`);
 });
 
-const cssVarToUsoVars = memize(value => {
+const cssVarToUsoVars = memize((value: string): string => {
   return value.replace(/var\(--(uso-var-expanded-)(.+?)\)/g, (_, _prefix, name) => `/*[[${name}]]*/`);
 });
 
-const isValidDeclaration = memize((prop, value) => {
+const isValidDeclaration = memize((prop: string, value: string): boolean => {
   if (!knownProperties.has(prop) && !/^--./.test(prop)) {
     return false;
   }
@@ -488,26 +539,26 @@ const isValidDeclaration = memize((prop, value) => {
 });
 
 // this may add extra newlines, but those are trimmed off later
-function makeComment(text) {
+function makeComment(text: string): Comment {
   return postcss.comment({
     raws: {before: "\n", after: "\n", left: " ", right: " "},
     text,
   });
 }
 
-const assignNewColor = memize((normalizedColor, newValue) => {
+const assignNewColor = memize((normalizedColor: string, newValue: string): string => {
   if (newValue === "$invert") {
-    let [_, r, g, b, a] = /^#(..)(..)(..)(..)$/.exec(normalizedColor);
-    r = (255 - Number.parseInt(r, 16)).toString(16).padStart(2, "0");
-    g = (255 - Number.parseInt(g, 16)).toString(16).padStart(2, "0");
-    b = (255 - Number.parseInt(b, 16)).toString(16).padStart(2, "0");
+    const [, rHex, gHex, bHex, a] = /^#(..)(..)(..)(..)$/.exec(normalizedColor)!;
+    const r = (255 - Number.parseInt(rHex, 16)).toString(16).padStart(2, "0");
+    const g = (255 - Number.parseInt(gHex, 16)).toString(16).padStart(2, "0");
+    const b = (255 - Number.parseInt(bHex, 16)).toString(16).padStart(2, "0");
     return `#${r}${g}${b}${a}`;
   } else {
     return newValue;
   }
 });
 
-function getNewColorValue(normalizedValue, colorMappings) {
+function getNewColorValue(normalizedValue: string, colorMappings: ColorMappings): string | null {
   if (colorMappings[normalizedValue]) {
     return colorMappings[normalizedValue];
   } else if (colorMappings.$monochrome) {
@@ -520,11 +571,11 @@ function getNewColorValue(normalizedValue, colorMappings) {
   return null; // did not match
 }
 
-function doReplace(node, oldColors, newValue) {
+function doReplace(node: ValueNode, oldColors: Set<string>, newValue: string): boolean {
   oldColors.add(node.type === "word" ? node.value : postcssValueParser.stringify([node]));
   node.value = newValue;
   node.type = "word";
-  delete node.nodes;
+  delete (node as {nodes?: Array<ValueNode>}).nodes;
   return true;
 }
 
@@ -555,7 +606,7 @@ const backgroundColorLonghands = new Set([
 const borderColorVars = new Set([...borderColorShorthands, ...borderColorLonghands]);
 const backgroundColorVars = new Set([...backgroundColorShorthands, ...backgroundColorLonghands]);
 
-function checkNode(node, prop, normalizedValue, oldColors, colorMappings, borderMappings, boxShadowMappings, backgroundMappings) {
+function checkNode(node: ValueNode, prop: string, normalizedValue: string, oldColors: Set<string>, colorMappings: ColorMappings, borderMappings: ColorMappings, boxShadowMappings: ColorMappings, backgroundMappings: ColorMappings): boolean | undefined {
   if (borderColorVars.has(prop) || prop === "border-image") {
     const newValue = getNewColorValue(normalizedValue, borderMappings);
     if (newValue) return doReplace(node, oldColors, newValue);
@@ -570,15 +621,16 @@ function checkNode(node, prop, normalizedValue, oldColors, colorMappings, border
   }
   const newValue = getNewColorValue(normalizedValue, colorMappings);
   if (newValue) return doReplace(node, oldColors, newValue);
+  return undefined;
 }
 
-function replaceColorsInValue(prop, value, colorMappings, borderMappings, boxShadowMappings, backgroundMappings) {
+function replaceColorsInValue(prop: string, value: string, colorMappings: ColorMappings, borderMappings: ColorMappings, boxShadowMappings: ColorMappings, backgroundMappings: ColorMappings): {newValue: string | null, oldColors: Array<string>} {
   const {nodes} = postcssValueParser(value);
-  const oldColors = new Set();
+  const oldColors = new Set<string>();
   let replaced = false;
 
   postcssValueParser.walk(nodes, node => {
-    let normalizedValue;
+    let normalizedValue: string | undefined;
     if (node.type === "word" && isColor(node.value)) {
       normalizedValue = normalizeColor(node.value);
     } else if (node.type === "function") {
@@ -596,25 +648,28 @@ function replaceColorsInValue(prop, value, colorMappings, borderMappings, boxSha
   };
 }
 
-const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings, names, index, opts) => {
+const plugin = (src: Source, declMappings: DeclMappings, colorMappings: ColorMappings, borderMappings: ColorMappings, boxShadowMappings: ColorMappings, backgroundMappings: ColorMappings, names: Record<string, string>, index: number, opts: ResolvedOptions): Plugin => {
   const commentStart = src.name || `${prefix}${index}`;
 
   return {
     postcssPlugin: "remap-css",
     Root: root => {
       root.walkRules(node => {
-        const matchedDeclStrings = [];
+        const matchedDeclStrings: Array<string | Array<string>> = [];
 
         node.walkDecls(decl => {
           const declString = stringifyDecl({prop: decl.prop, value: decl.value, important: decl.important});
-          const newDecls = [];
+          const newDecls: Array<Declaration> = [];
           if (declMappings[declString]) {
             for (const newDecl of declMappings[declString] || []) {
               const {prop, value, important, origValue} = newDecl;
               const newProp = prop;
               const newValue = origValue || value;
               const newImportant = Boolean(decl.important || important);
-              if (opts.validate && !isValidDeclaration(newProp, newValue)) return decl.remove();
+              if (opts.validate && !isValidDeclaration(newProp, newValue)) {
+                decl.remove();
+                return;
+              }
               newDecls.push(decl.clone({
                 prop: newProp,
                 value: newValue,
@@ -649,7 +704,7 @@ const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappi
                 const expanded = expandShorthandProperty(decl.prop, containsVar ? newValue.replace(varRe, "rgba(255,0,255,0)") : newValue);
                 let numReplaced = 0;
                 for (let [prop, value] of Object.entries(expanded)) {
-                  if (containsVar) value = newValue.match(varRe)[0];
+                  if (containsVar) value = varRe.exec(newValue)![0];
                   if (!prop.includes("color")) continue;
                   if (numReplaced === 0) {
                     decl.prop = prop;
@@ -681,18 +736,18 @@ const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappi
 
           if (newSelectors.length) {
             if (opts.comments) {
-              const targetNode = node.parent.type === "atrule" ? node.parent : node;
+              const targetNode = node.parent?.type === "atrule" ? node.parent as AtRule : node;
               const prevNode = targetNode.prev();
 
-              if (prevNode && prevNode.type === "comment" && prevNode.text && prevNode.text.startsWith(commentStart)) {
-                const prevDeclStrings = prevNode.text.match(/".+?"/g);
+              if (prevNode?.type === "comment" && prevNode.text && prevNode.text.startsWith(commentStart)) {
+                const prevDeclStrings = prevNode.text.match(/".+?"/g)!;
                 prevNode.text = `${commentStart}: ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
               } else {
                 root.insertBefore(targetNode, makeComment(`${commentStart}: ${uniq(matchedDeclStrings).join(", ")}`));
               }
             }
 
-            if (node.selector && (!node.parent || node.parent.type !== "atrule" || !atRulesWithNoSelectors.has(node.parent.name))) {
+            if (node.selector && (!node.parent || node.parent.type !== "atrule" || !atRulesWithNoSelectors.has((node.parent as AtRule).name))) {
               node.selector = joinSelectors(newSelectors);
             }
           } else {
@@ -718,7 +773,7 @@ const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappi
         if (!hasDeclarations(node)) node.remove();
         if (node.type === "rule") {
           // remove duplicate props (those are actual errors in the sources)
-          const seen = {};
+          const seen: Record<string, Array<Declaration>> = {};
 
           node.walkDecls(decl => {
             if (decl.raws._replaced) return;
@@ -740,7 +795,7 @@ const plugin = (src, declMappings, colorMappings, borderMappings, boxShadowMappi
 };
 plugin.postcss = true;
 
-async function format(css, opts) {
+async function format(css: string, opts: ResolvedOptions): Promise<string> {
   return (await perfectionist.process(css, {
     cascade: false,
     colorShorthand: true,
@@ -754,15 +809,24 @@ async function format(css, opts) {
   })).css;
 }
 
-export default async function remapCss(sources, mappings, opts = {}) {
-  opts = {...defaults, ...opts};
+/**
+ * Remap CSS rules based on declaration value. Returns a `Promise` that resolves to a CSS string.
+ *
+ * @param sources Array of CSS sources to remap.
+ * @param mappings CSS declaration value-to-value mapping. The key is either an exact match CSS
+ *   declaration or a special rule starting with `$`. The value is a replacement declaration or, for
+ *   special rules, a replacement value.
+ * @param opts Output options.
+ */
+export default async function remapCss(sources: Array<Source>, mappings: Record<string, string>, opts: Options = {}): Promise<string> {
+  const resolvedOpts: ResolvedOptions = {...defaults, ...opts};
 
-  const names = {};
+  const names: Record<string, string> = {};
   const [declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings] = prepareMappings(mappings, names);
   const postcssOpts = {parser: postcssSafeParser, from: undefined};
 
   const results = await Promise.all(sources.map((src, index) => {
-    const plug = plugin(src, declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings, names, index, {...opts});
+    const plug = plugin(src, declMappings, colorMappings, borderMappings, boxShadowMappings, backgroundMappings, names, index, {...resolvedOpts});
     return postcss([plug]).process(src.css, postcssOpts);
   }));
 
@@ -784,7 +848,7 @@ export default async function remapCss(sources, mappings, opts = {}) {
   output = (await postcss(plugins).process(output, postcssOpts)).css;
 
   // format
-  output = await format(output, opts);
+  output = await format(output, resolvedOpts);
 
   // move comments to their own line
   output = output.replace(/\} \/\*/g, "}\n/*");
@@ -798,8 +862,8 @@ export default async function remapCss(sources, mappings, opts = {}) {
     const parts = cssSelectorSplitter(content).filter(Boolean);
     const lastIndex = parts.length - 1;
     for (const [index, part] of Object.entries(parts)) {
-      const currentLength = /.*$/.exec(newContent)[0].length;
-      const requiredLength = opts.lineLength - part.length - whitespace.length;
+      const currentLength = /.*$/.exec(newContent)![0].length;
+      const requiredLength = resolvedOpts.lineLength - part.length - whitespace.length;
       if (requiredLength < currentLength) {
         newContent = newContent.replace(/ $/g, "");
         newContent += `\n${whitespace}`;
@@ -822,8 +886,8 @@ export default async function remapCss(sources, mappings, opts = {}) {
   output = cssVarToUsoVars(output);
 
   // indent everything
-  if (opts.indentCss && opts.indentCss > 0) {
-    output = output.replace(/^(.*)/gm, (_, m1) => `${" ".repeat(opts.indentCss)}${m1}`);
+  if (resolvedOpts.indentCss && resolvedOpts.indentCss > 0) {
+    output = output.replace(/^(.*)/gm, (_, m1) => `${" ".repeat(resolvedOpts.indentCss)}${m1}`);
   }
 
   return output;

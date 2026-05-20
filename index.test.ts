@@ -1,6 +1,7 @@
-import remapCss from "./index.js";
+import remapCss from "./index.ts";
+import type {Options, Source} from "./index.ts";
 
-function unintend(str) {
+function unintend(str: string): string {
   str = str.replace(/^\n/, "").replace(/\n +$/g, "\n");
   const indent = (/^ +/.exec(str.split(/\n/)[0]) || [[]])[0].length;
   const re = new RegExp(`^ {${indent}}`);
@@ -8,7 +9,16 @@ function unintend(str) {
   return str;
 }
 
-const makeTest = ({sources, mappings, opts, expected, expectedExact}) => {
+type TestCase = {
+  sources: Array<Source>,
+  mappings: Record<string, string>,
+  // `prefix` is a no-op here, `remapCss` only reads `source.prefix`
+  opts?: Options & {prefix?: string},
+  expected?: string,
+  expectedExact?: string,
+};
+
+const makeTest = ({sources, mappings, opts, expected, expectedExact}: TestCase) => {
   return async () => {
     const output = await remapCss(sources, mappings, opts);
     if (expected) expect(unintend(output)).toEqual(unintend(expected));
