@@ -10,7 +10,7 @@
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "license": "BSD-2-Clause",
-  "packageManager": "pnpm@11.5.2",
+  "packageManager": "pnpm@12.3.4",
   "engines": {
     "node": ">=22",
     "bun": "*"
