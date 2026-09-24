@@ -290,12 +290,10 @@ function rewriteSelectors(selectors: Array<string>, opts: ResolvedOptions, src: 
       let skip = false;
       const [first] = selector.split(/\s+/);
 
-      if (src.match) {
-        for (const match of src.match) {
-          if (selectorsIntersect(first, match)) {
-            intersects = true;
-            break;
-          }
+      for (const match of src.match ?? []) {
+        if (selectorsIntersect(first, match)) {
+          intersects = true;
+          break;
         }
       }
 
@@ -372,7 +370,7 @@ function hexFromColorFunction(node: ValueNode): string | null {
     if (!r || !g || !b) return null;
     return normalizeHexColor(`#${colorConvert.rgb.hex(r, g, b).toLowerCase()}${alphaToHex(a)}`);
   } else if (hslFunctions.has(node.value)) {
-    const [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => String(node.value));
+    const [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => node.value);
     if (!h || !s || !l) return null;
     const hNum = Number(h);
     const sNum = Number(s.replace("%", ""));
@@ -548,7 +546,7 @@ function makeComment(text: string): Comment {
 
 const assignNewColor = memize((normalizedColor: string, newValue: string): string => {
   if (newValue === "$invert") {
-    const [, rHex, gHex, bHex, a] = /^#(..)(..)(..)(..)$/.exec(normalizedColor)!;
+    const [rHex, gHex, bHex, a] = /^#(..)(..)(..)(..)$/.exec(normalizedColor)!.slice(1);
     const r = (255 - Number.parseInt(rHex, 16)).toString(16).padStart(2, "0");
     const g = (255 - Number.parseInt(gHex, 16)).toString(16).padStart(2, "0");
     const b = (255 - Number.parseInt(bHex, 16)).toString(16).padStart(2, "0");
@@ -665,7 +663,7 @@ const plugin = (src: Source, declMappings: DeclMappings, colorMappings: ColorMap
               const {prop, value, important, origValue} = newDecl;
               const newProp = prop;
               const newValue = origValue || value;
-              const newImportant = Boolean(decl.important || important);
+              const newImportant = decl.important || important;
               if (opts.validate && !isValidDeclaration(newProp, newValue)) {
                 decl.remove();
                 return;
