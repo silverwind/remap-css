@@ -3,7 +3,10 @@
   "version": "9.0.0",
   "description": "Remap CSS rules based on declaration value",
   "author": "silverwind",
-  "repository": "silverwind/remap-css",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/silverwind/remap-css.git"
+  },
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",
