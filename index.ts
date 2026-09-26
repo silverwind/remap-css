@@ -262,9 +262,9 @@ const selectorsIntersect = memoize((a: string) => memoize((b: string): boolean =
     const {nodes: nodesB} = cssSelectorTokenizer.parse(b);
 
     for (const a of nodesA[0].nodes) {
+      if (a.type === "operator") return false;
       for (const b of nodesB[0].nodes) {
-        if (!a.type || !b.type || !a.name || !b.name) return false;
-        if (a.type === b.type && a.name === b.name) return true;
+        if (a.name && a.type === b.type && a.name === b.name) return true;
       }
     }
     return false;

@@ -294,12 +294,15 @@ test("match repeats the matched compound instead of prefixing", makeTest({
     .foo>.c {color: red;}
     .foo::before {color: red;}
     .d {color: red;}
+    [data-x].foo .e {color: red;}
+    .d>.foo {color: red;}
   `, prefix: "body.foo", match: ["body", ".foo"]}],
   mappings: {
     "color: red": "color: blue",
   },
   expected: `
-    .foo.foo::before, .foo.foo>.c, body .a, body.foo .d, body.foo.foo .b {
+    .foo.foo::before, .foo.foo>.c, [data-x].foo[data-x].foo .e, body .a, body.foo .d,
+    body.foo .d>.foo, body.foo.foo .b {
       color: blue;
     }
 `}));
