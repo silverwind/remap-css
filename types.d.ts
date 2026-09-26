@@ -59,17 +59,6 @@ declare module "perfectionist" {
   export default perfectionist;
 }
 
-declare module "split-string" {
-  interface SplitStringOptions {
-    brackets?: Record<string, string> | boolean,
-    quotes?: Array<string> | boolean,
-    separator?: string,
-    strict?: boolean,
-  }
-  /** Split a string on a separator, respecting quotes and brackets. */
-  export default function splitString(input: string, options?: SplitStringOptions): Array<string>;
-}
-
 declare module "postcss-safe-parser" {
   import type {Parser, Root} from "postcss";
   const parse: Parser<Root>;

@@ -13,7 +13,6 @@ import postcssMergeRules from "postcss-merge-rules";
 import postcssSafeParser from "postcss-safe-parser";
 import postcssUniqueSelectors from "postcss-unique-selectors";
 import postcssValueParser from "postcss-value-parser";
-import splitString from "split-string";
 import {expandShorthandProperty} from "css-property-parser";
 import {isShorthand} from "css-shorthand-properties";
 import type {AtRule, ChildNode, Comment, Declaration, Plugin} from "postcss";
@@ -241,7 +240,6 @@ function memoize<Result>(fn: (arg: string) => Result): (arg: string) => Result {
 }
 
 const atRulesWithNoSelectors = new Set(["keyframes"]);
-const splitDecls = (str: string) => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim());
 const uniq = (arr: Array<string | Array<string>>) => Array.from(new Set(arr));
 const varRe = /var\(--(?!uso-var-expanded).+?\)/;
 const knownProperties = new Set(knownCssProperties.all);
@@ -449,7 +447,7 @@ const parseDecl = memoize((declString: string): Array<Decl> => {
   declString = declString.trim().replace(/;+$/, "").trim();
 
   const ret: Array<Decl> = [];
-  for (const str of splitDecls(declString)) {
+  for (const str of postcss.list.split(declString, [";"], true)) {
     const parts = str.split(":");
     const important = parts[parts.length - 1].toLowerCase() === "!important";
     if (important) parts.pop();

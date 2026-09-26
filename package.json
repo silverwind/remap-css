@@ -38,8 +38,7 @@
     "postcss-merge-rules": "9.0.4",
     "postcss-safe-parser": "7.1.0",
     "postcss-unique-selectors": "9.0.3",
-    "postcss-value-parser": "4.2.0",
-    "split-string": "6.1.0"
+    "postcss-value-parser": "4.2.0"
   },
   "devDependencies": {
     "@types/node": "26.6.3",
