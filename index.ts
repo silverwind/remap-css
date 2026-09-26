@@ -423,7 +423,7 @@ function normalizeDecl({prop, value, important}: {prop: string, value: string, i
 
   value = value
     // remove leading zeroes on values like 'rgba(27,31,35,0.075)'
-    .replace(/0(\.[0-9])/g, (_, val) => val)
+    .replace(/(?<![0-9])0(\.[0-9])/g, (_, val) => val)
     // normalize 'linear-gradient(-180deg, #0679fc, #0361cc 90%)' to not have whitespace in parens
     .replace(/([a-z-]+\()(.+)(\))/g, (_, m1, m2, m3) => `${m1}${m2.replace(/,\s+/g, ",")}${m3}`);
 
@@ -452,7 +452,7 @@ const parseDecl = memoize((declString: string): Array<Decl> => {
     const important = parts[parts.length - 1].toLowerCase() === "!important";
     if (important) parts.pop();
     const prop = parts.shift()!.trim();
-    const value = parts.join(",").trim();
+    const value = parts.join(":").trim();
     ret.push(normalizeDecl({prop, value, important}));
   }
   return ret;

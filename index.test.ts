@@ -309,13 +309,22 @@ test("prop replacement", makeTest({
     a {
       background: red;
     }
+    b {
+      width: 10.5px;
+      color: green;
+    }
   `}],
   mappings: {
     "background: red": "background-color: blue",
+    "width: 1.5px": "width: 3px",
+    "color: green": "background-image: url(https://example.com/a.png)",
   },
   expected: `
     a {
       background-color: blue;
+    }
+    b {
+      background-image: url(https://example.com/a.png);
     }
 `}));
 
