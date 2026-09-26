@@ -242,7 +242,6 @@ function memoize<Result>(fn: (arg: string) => Result): (arg: string) => Result {
 
 const atRulesWithNoSelectors = new Set(["keyframes"]);
 const splitDecls = (str: string) => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim());
-const splitSelectors = memoize((str: string) => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
 const uniq = (arr: Array<string | Array<string>>) => Array.from(new Set(arr));
 const varRe = /var\(--(?!uso-var-expanded).+?\)/;
 const knownProperties = new Set(knownCssProperties.all);
@@ -690,7 +689,7 @@ const plugin = (src: Source, declMappings: DeclMappings, colorMappings: ColorMap
         });
 
         if (matchedDeclStrings.length) {
-          const newSelectors = rewriteSelectors(splitSelectors(node.selector), opts, src)
+          const newSelectors = rewriteSelectors(node.selectors, opts, src)
             .filter(selector => opts.ignoreSelectors.every(re => !re.test(selector)));
 
           if (newSelectors.length) {

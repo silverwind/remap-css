@@ -1099,14 +1099,18 @@ test("whitespace after uso var 2", makeTest({
 
 test("selector split", makeTest({
   sources: [{css: `
-    html.octotree-gh[data-octotree-theme]:not([data-octotree-theme=sidebar]) main [style="background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));"] {
+    html.octotree-gh[data-octotree-theme]:not([data-octotree-theme=sidebar]) main [style="background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));"], :is(.ignored, .kept) .a, :not(.b,.c), .w-1\\/2 {
       color: red;
     }
   `}],
   mappings: {
     "$value: red": "blue",
   },
+  opts: {
+    ignoreSelectors: [/\.ignored/],
+  },
   expected: `
+    .w-1\\/2, :not(.b,.c),
     html.octotree-gh[data-octotree-theme]:not([data-octotree-theme=sidebar]) main [style="background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));"] {
       color: blue;
     }
