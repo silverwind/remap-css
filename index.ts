@@ -356,7 +356,7 @@ const cssValueKeywords = new Set([
 
 const isColor = memoize((value: string): boolean => {
   value = value.toLowerCase();
-  if (cssColorNames[value]) return true;
+  if (Object.hasOwn(cssColorNames, value)) return true;
   if (cssValueKeywords.has(value)) return true;
   if (/^#[0-9a-f]{3,4}$/.test(value)) return true;
   if (/^#[0-9a-f]{6}$/.test(value)) return true;
@@ -390,7 +390,7 @@ function hexFromColorFunction(node: ValueNode): string | null {
 const normalizeColor = memoize((value: string): string => {
   value = value.toLowerCase();
 
-  if (value in cssColorNames) {
+  if (Object.hasOwn(cssColorNames, value)) {
     value = cssColorNames[value];
   }
 
@@ -731,15 +731,15 @@ const plugin = (src: Source, declMappings: DeclMappings, colorMappings: ColorMap
           node.remove();
         } else if (node.type === "rule") {
           // remove duplicate props (those are actual errors in the sources)
-          const seen: Record<string, Array<Declaration>> = {};
+          const decls: Array<Declaration> = [];
 
           node.walkDecls(decl => {
-            if (!decl.raws._replaced) (seen[decl.prop] ??= []).push(decl);
+            if (!decl.raws._replaced) decls.push(decl);
           });
 
-          for (const decls of Object.values(seen)) {
-            if (decls.length > 1) {
-              for (const decl of decls.slice(0, -1)) {
+          for (const propDecls of Map.groupBy(decls, decl => decl.prop).values()) {
+            if (propDecls.length > 1) {
+              for (const decl of propDecls.slice(0, -1)) {
                 decl.remove();
               }
             }

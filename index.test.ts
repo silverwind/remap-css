@@ -949,13 +949,15 @@ test("radial with var", makeTest({
     }
 `}));
 
-test("keep", makeTest({
+test("keep, including prototype-named properties and values", makeTest({
   sources: [{css: `
     @media (min-width: 777px) {
       a {
         color: blue;
         background: radial-gradient(white 40%, transparent 40%) no-repeat;
         border-color: rgb(var(--a), var(--b), var(--c));
+        animation-name: constructor;
+        constructor: red;
       }
     }
   `}],
@@ -971,6 +973,8 @@ test("keep", makeTest({
         color: blue;
         background: radial-gradient(var(--border-color) 40%, transparent 40%) no-repeat;
         border-color: rgb(var(--a), var(--b), var(--c));
+        animation-name: constructor;
+        constructor: red;
       }
     }
 `}));
