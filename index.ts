@@ -278,6 +278,23 @@ function isRootSelector(selector: string): boolean {
   return selector.startsWith("html") || selector.startsWith(":root");
 }
 
+const typeNodeTypes = new Set(["element", "universal"]);
+const unrepeatableNodeTypes = new Set([...typeNodeTypes, "pseudo-element", "invalid"]);
+const legacyPseudoElements = new Set(["before", "after", "first-line", "first-letter"]);
+
+// repeat the leading compound of `first` for weight, leaving out parts that can not repeat
+function repeatFirstCompound(selector: string, first: string): string {
+  const [{nodes}] = cssSelectorTokenizer.parse(first).nodes;
+  const operatorIndex = nodes.findIndex(node => node.type === "operator");
+  const compound = operatorIndex === -1 ? nodes : nodes.slice(0, operatorIndex);
+  const typeSelector = typeNodeTypes.has(compound[0].type!) ? cssSelectorTokenizer.stringify(compound[0]) : "";
+  const repeated = compound
+    .filter(node => !unrepeatableNodeTypes.has(node.type!) && !(node.type === "pseudo-class" && legacyPseudoElements.has(node.name!)))
+    .map(node => cssSelectorTokenizer.stringify(node))
+    .join("");
+  return `${typeSelector}${repeated}${selector.substring(typeSelector.length)}`;
+}
+
 function rewriteSelectors(selectors: Array<string>, opts: ResolvedOptions, src: Source): Array<string> {
   const ret: Array<string> = [];
 
@@ -293,12 +310,11 @@ function rewriteSelectors(selectors: Array<string>, opts: ResolvedOptions, src: 
     }
 
     if (src.prefix && !/^[0-9]+%$/.test(selector)) { // ignore keyframes steps
-      // don't add whitespace after prefix if matches a selector in `match`
       const [first] = selector.split(/\s+/);
       if (isRootSelector(first) && isRootSelector(src.prefix)) {
         selector = `${src.prefix} ${selector.substring(first.length).trim()}`;
       } else if (src.match?.some(match => selectorsIntersect(first)(match))) {
-        selector = `${first}${selector}`;
+        selector = repeatFirstCompound(selector, first);
       } else {
         selector = `${src.prefix} ${selector}`;
       }

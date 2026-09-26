@@ -14,8 +14,10 @@ declare module "css-selector-tokenizer" {
     nodes: Array<SelectorNode>,
   }
   export function parse(selector: string): ParseResult;
+  export function stringify(node: SelectorNode | ParseResult): string;
   const cssSelectorTokenizer: {
     parse: typeof parse,
+    stringify: typeof stringify,
   };
   export default cssSelectorTokenizer;
 }

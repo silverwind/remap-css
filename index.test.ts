@@ -277,6 +277,23 @@ test("keyframe atrule, no prefix", makeTest({
     }
 `}));
 
+test("match repeats the matched compound instead of prefixing", makeTest({
+  sources: [{css: `
+    body .a {color: red;}
+    body.foo .b {color: red;}
+    .foo>.c {color: red;}
+    .foo::before {color: red;}
+    .d {color: red;}
+  `, prefix: "body.foo", match: ["body", ".foo"]}],
+  mappings: {
+    "color: red": "color: blue",
+  },
+  expected: `
+    .foo.foo::before, .foo.foo>.c, body .a, body.foo .d, body.foo.foo .b {
+      color: blue;
+    }
+`}));
+
 test("prop replacement", makeTest({
   sources: [{css: `
     a {
