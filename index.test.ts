@@ -438,7 +438,9 @@ test("$value hsla", makeTest({
 test("$value: $monochrome", makeTest({
   sources: [{css: `
     a:hover {
-      background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
+      background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0));
+      color: inherit;
+      width: calc(1px);
     }
   `}],
   mappings: {

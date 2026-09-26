@@ -551,7 +551,7 @@ function assignNewColor(normalizedColor: string, newValue: string): string | nul
 function getNewColorValue(normalizedValue: string, colorMappings: ColorMappings): string | null {
   if (colorMappings[normalizedValue]) {
     return colorMappings[normalizedValue];
-  } else if (colorMappings.$monochrome) {
+  } else if (colorMappings.$monochrome && /^#[0-9a-f]{8}$/.test(normalizedValue)) {
     const [r, g, b] = colorConvert.hex.rgb(normalizedValue);
     if (r === g && g === b) {
       return assignNewColor(normalizedValue, colorMappings.$monochrome);
