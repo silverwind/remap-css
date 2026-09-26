@@ -187,9 +187,6 @@ importers:
       known-css-properties:
         specifier: 0.37.0
         version: 0.37.0
-      memize:
-        specifier: 2.1.1
-        version: 2.1.1
       perfectionist:
         specifier: 2.4.0
         version: 2.4.0
@@ -1434,9 +1431,6 @@ packages:
 
   mdn-data@2.35.0:
     resolution: {integrity: sha512-k+1+dEIm2z/BEfdvYzT/fIyAGeDBo/1AJNJI4ilFXJRYoxP/3Ds+GP8shAOIq8jYXY9N5nGB3Ag104NsagmLAA==}
-
-  memize@2.1.1:
-    resolution: {integrity: sha512-8Nl+i9S5D6KXnruM03Jgjb+LwSupvR13WBr4hJegaaEyobvowCVupi79y2WSiWvO1mzBWxPwEYE5feCe8vyA5w==}
 
   minimatch@10.2.6:
     resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
@@ -2916,8 +2910,6 @@ snapshots:
   mdn-data@2.27.1: {}
 
   mdn-data@2.35.0: {}
-
-  memize@2.1.1: {}
 
   minimatch@10.2.6:
     dependencies:

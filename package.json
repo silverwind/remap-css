@@ -29,7 +29,6 @@
     "css-shorthand-properties": "1.1.2",
     "csstree-validator": "4.0.1",
     "known-css-properties": "0.37.0",
-    "memize": "2.1.1",
     "perfectionist": "2.4.0",
     "postcss": "8.5.28",
     "postcss-discard-duplicates": "9.0.3",

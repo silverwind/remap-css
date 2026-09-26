@@ -3,7 +3,6 @@ import cssSelectorSplitter from "css-selector-splitter";
 import cssSelectorTokenizer from "css-selector-tokenizer";
 import {validate} from "csstree-validator";
 import knownCssProperties from "known-css-properties";
-import memize from "memize";
 import perfectionist from "perfectionist";
 import postcss from "postcss";
 import postcssDiscardDuplicates from "postcss-discard-duplicates";
@@ -229,10 +228,22 @@ const defaults: ResolvedOptions = {
   keep: false,
 };
 
+function memoize<Result>(fn: (arg: string) => Result): (arg: string) => Result {
+  const cache = new Map<string, Result>();
+  return arg => {
+    let result = cache.get(arg);
+    if (result === undefined) {
+      result = fn(arg);
+      cache.set(arg, result);
+    }
+    return result;
+  };
+}
+
 const prefix = "source #";
 const atRulesWithNoSelectors = new Set(["keyframes"]);
-const splitDecls = memize((str: string) => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim()));
-const splitSelectors = memize((str: string) => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
+const splitDecls = (str: string) => splitString(str, {separator: ";", quotes: [`"`, `'`]}).map(s => s.trim());
+const splitSelectors = memoize((str: string) => splitString(str, {separator: ",", quotes: [`"`, `'`]}).map(s => s.trim()));
 const joinSelectors = (selectors: Array<string>) => selectors.join(", ");
 const uniq = (arr: Array<string | Array<string>>) => Array.from(new Set(arr));
 const varRe = /var\(--(?!uso-var-expanded).+?\)/;
@@ -248,7 +259,7 @@ function getProperty(decl: {prop: string, raws?: {before?: string}}): string {
   }
 }
 
-const selectorsIntersect = memize((a: string, b: string): boolean => {
+const selectorsIntersect = memoize((a: string) => memoize((b: string): boolean => {
   try {
     const {nodes: nodesA} = cssSelectorTokenizer.parse(a);
     const {nodes: nodesB} = cssSelectorTokenizer.parse(b);
@@ -263,7 +274,7 @@ const selectorsIntersect = memize((a: string, b: string): boolean => {
   } catch {
     return false;
   }
-});
+}));
 
 function isRootSelector(selector: string): boolean {
   return selector.startsWith("html") || selector.startsWith(":root");
@@ -291,7 +302,7 @@ function rewriteSelectors(selectors: Array<string>, opts: ResolvedOptions, src: 
       const [first] = selector.split(/\s+/);
 
       for (const match of src.match ?? []) {
-        if (selectorsIntersect(first, match)) {
+        if (selectorsIntersect(first)(match)) {
           intersects = true;
           break;
         }
@@ -319,7 +330,7 @@ function rewriteSelectors(selectors: Array<string>, opts: ResolvedOptions, src: 
   return ret;
 }
 
-const normalizeHexColor = memize((value: string): string => {
+function normalizeHexColor(value: string): string {
   if ([4, 5].includes(value.length)) {
     const [h, r, g, b, a] = value;
     return `${h}${r}${r}${g}${g}${b}${b}${a || "f"}${a || "f"}`;
@@ -327,15 +338,15 @@ const normalizeHexColor = memize((value: string): string => {
     return `${value}ff`;
   }
   return value;
-});
+}
 
-const alphaToHex = memize((alpha: number | string | undefined): string => {
+function alphaToHex(alpha: number | string | undefined): string {
   if (alpha === undefined) return "";
   let value = Number(alpha);
   if (value > 1) value = 1;
   if (value < 0) value = 0;
   return Math.floor(value * 255).toString(16).padStart(2, "0");
-});
+}
 
 const cssValueKeywords = new Set([
   "currentcolor",
@@ -347,7 +358,7 @@ const cssValueKeywords = new Set([
   "unset",
 ]);
 
-const isColor = memize((value: string): boolean => {
+const isColor = memoize((value: string): boolean => {
   value = value.toLowerCase();
   if (cssColorNames[value]) return true;
   if (cssValueKeywords.has(value)) return true;
@@ -380,7 +391,7 @@ function hexFromColorFunction(node: ValueNode): string | null {
   return null;
 }
 
-const normalizeColor = memize((value: string): string => {
+const normalizeColor = memoize((value: string): string => {
   value = value.toLowerCase();
 
   if (value in cssColorNames) {
@@ -436,7 +447,7 @@ function normalizeDecl({prop, raws, value, important}: {prop: string, raws?: {be
 }
 
 // returns an array of declarations
-const parseDecl = memize((declString: string): Array<Decl> => {
+const parseDecl = memoize((declString: string): Array<Decl> => {
   declString = declString.trim().replace(/;+$/, "").trim();
 
   const ret: Array<Decl> = [];
@@ -515,15 +526,15 @@ function hasDeclarations(root: ChildNode): boolean {
   return false;
 }
 
-const usoVarToCssVar = memize((value: string): string => {
+function usoVarToCssVar(value: string): string {
   return value.replace(/\/\*\[\[(.+?)\]\]\*\//g, (_, name) => `var(--uso-var-expanded-${name})`);
-});
+}
 
-const cssVarToUsoVars = memize((value: string): string => {
+function cssVarToUsoVars(value: string): string {
   return value.replace(/var\(--(uso-var-expanded-)(.+?)\)/g, (_, _prefix, name) => `/*[[${name}]]*/`);
-});
+}
 
-const isValidDeclaration = memize((prop: string, value: string): boolean => {
+const isValidDeclaration = memoize((prop: string) => memoize((value: string): boolean => {
   if (!knownProperties.has(prop) && !/^--./.test(prop)) {
     return false;
   }
@@ -534,7 +545,7 @@ const isValidDeclaration = memize((prop: string, value: string): boolean => {
   } catch {
     return false;
   }
-});
+}));
 
 // this may add extra newlines, but those are trimmed off later
 function makeComment(text: string): Comment {
@@ -544,7 +555,7 @@ function makeComment(text: string): Comment {
   });
 }
 
-const assignNewColor = memize((normalizedColor: string, newValue: string): string => {
+function assignNewColor(normalizedColor: string, newValue: string): string {
   if (newValue === "$invert") {
     const [rHex, gHex, bHex, a] = /^#(..)(..)(..)(..)$/.exec(normalizedColor)!.slice(1);
     const r = (255 - Number.parseInt(rHex, 16)).toString(16).padStart(2, "0");
@@ -554,7 +565,7 @@ const assignNewColor = memize((normalizedColor: string, newValue: string): strin
   } else {
     return newValue;
   }
-});
+}
 
 function getNewColorValue(normalizedValue: string, colorMappings: ColorMappings): string | null {
   if (colorMappings[normalizedValue]) {
@@ -664,7 +675,7 @@ const plugin = (src: Source, declMappings: DeclMappings, colorMappings: ColorMap
               const newProp = prop;
               const newValue = origValue || value;
               const newImportant = decl.important || important;
-              if (opts.validate && !isValidDeclaration(newProp, newValue)) {
+              if (opts.validate && !isValidDeclaration(newProp)(newValue)) {
                 decl.remove();
                 return;
               }
@@ -690,7 +701,7 @@ const plugin = (src: Source, declMappings: DeclMappings, colorMappings: ColorMap
               return;
             }
 
-            if (opts.validate && !isValidDeclaration(getProperty(decl), newValue)) {
+            if (opts.validate && !isValidDeclaration(getProperty(decl))(newValue)) {
               decl.remove();
               return;
             }
