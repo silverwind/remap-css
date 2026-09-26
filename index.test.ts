@@ -12,8 +12,7 @@ function unintend(str: string): string {
 type TestCase = {
   sources: Array<Source>,
   mappings: Record<string, string>,
-  // `prefix` is a no-op here, `remapCss` only reads `source.prefix`
-  opts?: Options & {prefix?: string},
+  opts?: Options,
   expected?: string,
   expectedExact?: string,
 };
@@ -266,12 +265,9 @@ test("keyframe atrule, no prefix", makeTest({
         background: none;
       }
     }
-  `}],
+  `, prefix: "prefix"}],
   mappings: {
     "$background: none": "blue",
-  },
-  opts: {
-    prefix: "prefix",
   },
   expected: `
     @keyframes blink {
@@ -393,21 +389,6 @@ test("$value in gradient hex", makeTest({
 `}));
 
 test("$value in gradient rgb", makeTest({
-  sources: [{css: `
-    a:hover {
-      background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
-    }
-  `}],
-  mappings: {
-    "$value: rgb(255,255,255,0)": "#123",
-  },
-  expected: `
-  a:hover {
-    background: linear-gradient(to bottom, #1074e7, #123);
-  }
-`}));
-
-test("$value in gradient rgb 2", makeTest({
   sources: [{css: `
     a:hover {
       background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
@@ -606,7 +587,6 @@ test("border-bottom-color", makeTest({
     a {
       border-bottom-color: red;
       border-top-color: yellow;
-
     }
 `}));
 

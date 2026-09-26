@@ -3,12 +3,6 @@ declare module "css-selector-splitter" {
   export default function splitSelectors(selector: string): Array<string>;
 }
 
-declare module "postcss-discard-overridden" {
-  import type {PluginCreator} from "postcss";
-  const plugin: PluginCreator<void>;
-  export default plugin;
-}
-
 declare module "css-selector-tokenizer" {
   interface SelectorNode {
     type?: string,
@@ -20,20 +14,15 @@ declare module "css-selector-tokenizer" {
     nodes: Array<SelectorNode>,
   }
   export function parse(selector: string): ParseResult;
-  export function stringify(node: ParseResult): string;
   const cssSelectorTokenizer: {
     parse: typeof parse,
-    stringify: typeof stringify,
   };
   export default cssSelectorTokenizer;
 }
 
 declare module "css-shorthand-properties" {
-  export const shorthandProperties: Record<string, Array<string>>;
   /** Whether the given property is a CSS shorthand property. */
   export function isShorthand(property: string): boolean;
-  /** Expand a shorthand property into its longhand property names. */
-  export function expand(property: string, recurse?: boolean): Array<string>;
 }
 
 declare module "csstree-validator" {
@@ -100,7 +89,6 @@ declare module "postcss-value-parser" {
     (value: string): ParsedValue,
     walk(nodes: Array<ValueNode>, callback: (node: ValueNode, index: number, nodes: Array<ValueNode>) => boolean | void, bubble?: boolean): void,
     stringify(nodes: ValueNode | Array<ValueNode>, custom?: (node: ValueNode) => string | undefined): string,
-    unit(value: string): {number: string, unit: string} | false,
   }
   const postcssValueParser: PostcssValueParser;
   export default postcssValueParser;

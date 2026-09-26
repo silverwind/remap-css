@@ -39,8 +39,8 @@ Returns a `Promise` that resolves to a CSS string.
     - `name`: *string* Optional name used in comments
 - `mappings`: *Object* CSS declaration value-to-value mapping. The key is either an exact match CSS declaration or a special rule starting with `$`. The value is a replacement declaration or a replacement value in the case of a special rule.
 - `opts`: *Object*
-  - `indentSize`: *number* Numbers of spaces to indent rules and declarations. Default: `2`.
-  - `indentCss`: *number* Numbers of spaces to indent the output. Default: `0`.
+  - `indentSize`: *number* Number of spaces to indent rules and declarations. Default: `2`.
+  - `indentCss`: *number* Number of spaces to indent the output. Default: `0`.
   - `lineLength`: *number* Number of characters after which to wrap lines. Default: `80`.
   - `ignoreSelectors`: *Array* of *RegExp* Regular expressions of selectors to ignore. Default: `[]`.
   - `comments`: *boolean* Whether to output comments. Default: `false`.
