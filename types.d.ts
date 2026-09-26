@@ -39,6 +39,7 @@ declare module "csstree-validator" {
 
 declare module "perfectionist" {
   interface PerfectionistOptions {
+    parser?: import("postcss").Parser,
     cascade?: boolean,
     colorShorthand?: boolean,
     indentSize?: number,

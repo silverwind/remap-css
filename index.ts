@@ -783,7 +783,7 @@ export default async function remapCss(sources: Array<Source>, mappings: Record<
   let output = (await postcss(plugins).process(results.map(({css}) => css).join(""), postcssOpts)).css;
 
   // format
-  output = (await perfectionist.process(output, {
+  const formatOpts = {
     cascade: false,
     colorShorthand: true,
     indentSize: resolvedOpts.indentSize,
@@ -793,7 +793,12 @@ export default async function remapCss(sources: Array<Source>, mappings: Record<
     trimLeadingZero: true,
     trimTrailingZeros: true,
     zeroLengthNoUnit: true,
-  })).css;
+  };
+  try {
+    output = (await perfectionist.process(output, formatOpts)).css;
+  } catch { // perfectionist's postcss 5 parser fails on some valid css, like `@` in values
+    output = (await perfectionist.process(output, {...formatOpts, parser: postcssSafeParser})).css;
+  }
 
   // move comments to their own line
   output = output.replace(/\} \/\*/g, "}\n/*");

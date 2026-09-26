@@ -949,7 +949,7 @@ test("radial with var", makeTest({
     }
 `}));
 
-test("keep, including prototype-named properties and values", makeTest({
+test("keep, including prototype names and @ in values", makeTest({
   sources: [{css: `
     @media (min-width: 777px) {
       a {
@@ -958,7 +958,7 @@ test("keep, including prototype-named properties and values", makeTest({
         border-color: rgb(var(--a), var(--b), var(--c));
         animation-name: constructor;
         constructor: red;
-      }
+        grid-area: x@y}
     }
   `}],
   mappings: {
@@ -975,6 +975,7 @@ test("keep, including prototype-named properties and values", makeTest({
         border-color: rgb(var(--a), var(--b), var(--c));
         animation-name: constructor;
         constructor: red;
+        grid-area: x@y;
       }
     }
 `}));
