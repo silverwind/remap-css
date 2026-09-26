@@ -13,105 +13,52 @@ type TestCase = {
   sources: Array<Source>,
   mappings: Record<string, string>,
   opts?: Options,
-  expected?: string,
-  expectedExact?: string,
+  expected: string,
 };
 
-const makeTest = ({sources, mappings, opts, expected, expectedExact}: TestCase) => {
-  return async () => {
-    const output = await remapCss(sources, mappings, opts);
-    if (expected) expect(unintend(output)).toEqual(unintend(expected));
-    if (expectedExact) expect(output).toEqual(expectedExact);
-  };
+const makeTest = ({sources, mappings, opts, expected}: TestCase) => async () => {
+  expect(await remapCss(sources, mappings, opts)).toEqual(unintend(expected));
 };
 
-test("no input", makeTest({
-  sources: [],
-  mappings: {},
-  expected: "",
-}));
+test("no input", makeTest({sources: [], mappings: {}, expected: ""}));
 
-test("no mappings", makeTest({
-  sources: [{css: "a {color: red}"}],
-  mappings: {},
-  expected: "",
-}));
+test("no mappings", makeTest({sources: [{css: "a {color: red}"}], mappings: {}, expected: ""}));
 
 test("basic", makeTest({
   sources: [{css: `
     a {color: red;}
   `}],
-  mappings: {
-    "color: red": "color: blue",
-  },
+  mappings: {"color: red": "color: blue"},
   expected: `
     a {
       color: blue;
     }
 `}));
 
-test("multiple sources", makeTest({
-  sources: [
-    {css: `a {color: red;}`},
-    {css: `b {color: red;}`},
-  ],
-  mappings: {
-    "color: red": "color: blue",
-  },
-  expected: `
-    a, b {
-      color: blue;
-    }
-`}));
-
-test("multiple selectors", makeTest({
-  sources: [{css: `
+test.each(Object.entries({
+  "multiple sources": [{css: `a {color: red;}`}, {css: `b {color: red;}`}],
+  "multiple selectors": [{css: `
     a,b {color: red;}
   `}],
-  mappings: {
-    "color: red": "color: blue",
-  },
-  expected: `
-    a, b {
-      color: blue;
-    }
-`}));
-
-test("single selectors", makeTest({
-  sources: [{css: `
+  "single selectors": [{css: `
     a {color: red;}
     b {color: red;}
   `}],
-  mappings: {
-    "color: red": "color: blue",
-  },
-  expected: `
-    a, b {
-      color: blue;
-    }
-`}));
-
-test("duplicate rules", makeTest({
-  sources: [{css: `
+  "duplicate rules": [{css: `
     b {color: red;}
     a, b {color: red;}
   `}],
-  mappings: {
-    "color: red": "color: blue",
-  },
-  expected: `
-    a, b {
-      color: blue;
-    }
-`}));
+}))("%s", (_name, sources) => makeTest({sources, mappings: {"color: red": "color: blue"}, expected: `
+  a, b {
+    color: blue;
+  }
+`})());
 
 test("special rule", makeTest({
   sources: [{css: `
     a {border-left: 1px solid red;}
   `}],
-  mappings: {
-    "$border: red": "blue",
-  },
+  mappings: {"$border: red": "blue"},
   expected: `
     a {
       border-left-color: blue;
@@ -125,10 +72,7 @@ test("important", makeTest({
     a {background: yellow !important;}
     b {background: yellow !important;}
   `}],
-  mappings: {
-    "background: yellow": "background: green",
-    "background: red": "background: blue",
-  },
+  mappings: {"background: yellow": "background: green", "background: red": "background: blue"},
   expected: `
     a {
       background: blue;
@@ -148,10 +92,7 @@ test("order", makeTest({
     c {background: yellow;}
     d {background: red;}
   `}],
-  mappings: {
-    "background: yellow": "background: green",
-    "background: red": "background: blue",
-  },
+  mappings: {"background: yellow": "background: green", "background: red": "background: blue"},
   expected: `
     a {
       background: blue;
@@ -166,57 +107,34 @@ test("order", makeTest({
 
 test("indentSize 0", makeTest({
   sources: [{css: `a {color: red;}`}],
-  mappings: {
-    "color: red": "color: blue",
-  },
-  opts: {
-    indentSize: 0,
-  },
-  expectedExact: `a {\ncolor: blue;\n}`,
+  mappings: {"color: red": "color: blue"},
+  opts: {indentSize: 0},
+  expected: `a {\ncolor: blue;\n}`,
 }));
 
 test("indentSize 0, comments: true", makeTest({
   sources: [{css: `a {color: red;}`}],
-  mappings: {
-    "color: red": "color: blue",
-  },
-  opts: {
-    indentSize: 0,
-    comments: true,
-  },
-  expectedExact: `/* source #0: "color: red" */\na {\ncolor: blue;\n}`,
+  mappings: {"color: red": "color: blue"},
+  opts: {indentSize: 0, comments: true},
+  expected: `/* source #0: "color: red" */\na {\ncolor: blue;\n}`,
 }));
 
-test("special mapping name", makeTest({
-  sources: [{css: `a {background: red;}`}],
-  mappings: {
-    "$background: red": "blue",
-  },
-  opts: {
-    indentSize: 0,
-    comments: true,
-  },
-  expectedExact: `/* source #0: "red" */\na {\nbackground-color: blue;\n}`,
-}));
-
-test("ignore atrules", makeTest({
-  sources: [{css: `
+test.each(Object.entries({
+  "special mapping name": `a {background: red;}`,
+  "ignore atrules": `
     a {
       background: red;
     }
     @font-face {
       font-family: 'font';
     }
-  `}],
-  mappings: {
-    "$background: red": "blue",
-  },
-  opts: {
-    indentSize: 0,
-    comments: true,
-  },
-  expectedExact: `/* source #0: "red" */\na {\nbackground-color: blue;\n}`,
-}));
+  `,
+}))("%s", (_name, css) => makeTest({
+  sources: [{css}],
+  mappings: {"$background: red": "blue"},
+  opts: {indentSize: 0, comments: true},
+  expected: `/* source #0: "red" */\na {\nbackground-color: blue;\n}`,
+})());
 
 test("atrules", makeTest({
   sources: [{css: `
@@ -226,9 +144,7 @@ test("atrules", makeTest({
       }
     }
   `}],
-  mappings: {
-    "$background: red": "blue",
-  },
+  mappings: {"$background: red": "blue"},
   expected: `
     @media screen {
       a {
@@ -261,14 +177,9 @@ test("atrules comments", makeTest({
       background: green;
     }
   `}],
-  mappings: {
-    "$background: red": "blue",
-    "$background: green": "yellow",
-  },
-  opts: {
-    comments: true,
-  },
-  expectedExact: `/* source #0: "red", "green" */\n@media screen {\n  a {\n    background-color: blue;\n  }\n  b {\n    background-color: yellow;\n  }\n}\n/* source #0: "green" */\n@supports (display: grid) {\n  e {\n    background-color: yellow;\n  }\n  /* source #0: "red" */\n  @media print {\n    c {\n      background-color: blue;\n    }\n  }\n}\n/* source #0: "green" */\nd {\n  background-color: yellow;\n}`,
+  mappings: {"$background: red": "blue", "$background: green": "yellow"},
+  opts: {comments: true},
+  expected: `/* source #0: "red", "green" */\n@media screen {\n  a {\n    background-color: blue;\n  }\n  b {\n    background-color: yellow;\n  }\n}\n/* source #0: "green" */\n@supports (display: grid) {\n  e {\n    background-color: yellow;\n  }\n  /* source #0: "red" */\n  @media print {\n    c {\n      background-color: blue;\n    }\n  }\n}\n/* source #0: "green" */\nd {\n  background-color: yellow;\n}`,
 }));
 
 test("keyframe atrule, no prefix", makeTest({
@@ -279,9 +190,7 @@ test("keyframe atrule, no prefix", makeTest({
       }
     }
   `, prefix: "prefix"}],
-  mappings: {
-    "$background: none": "blue",
-  },
+  mappings: {"$background: none": "blue"},
   expected: `
     @keyframes blink {
       50% {
@@ -300,9 +209,7 @@ test("match repeats the matched compound instead of prefixing", makeTest({
     [data-x].foo .e {color: red;}
     .d>.foo {color: red;}
   `, prefix: "body.foo", match: ["body", ".foo"]}],
-  mappings: {
-    "color: red": "color: blue",
-  },
+  mappings: {"color: red": "color: blue"},
   expected: `
     .foo.foo::before, .foo.foo>.c, [data-x].foo[data-x].foo .e, body .a, body.foo .d,
     body.foo .d>.foo, body.foo.foo .b {
@@ -345,10 +252,7 @@ test("duplicate props", makeTest({
       background: red;
     }
   `}],
-  mappings: {
-    "background: green": "background-color: yellow",
-    "background: red": "background-color: blue",
-  },
+  mappings: {"background: green": "background-color: yellow", "background: red": "background-color: blue"},
   expected: `
     a {
       background-color: yellow;
@@ -389,9 +293,7 @@ test("validate", makeTest({
     "color: red": "color: blue",
     "$background: linear-gradient(red, blue)": "linear-gradient(-180deg, #202020 0%, #181818 90%)",
   },
-  opts: {
-    validate: true,
-  },
+  opts: {validate: true},
   expected: `
     a {
       color: blue;
@@ -400,32 +302,22 @@ test("validate", makeTest({
 
 test("sourceNames", makeTest({
   sources: [{css: `a {color: red;}`, name: "test"}],
-  mappings: {
-    "color: red": "color: blue",
-  },
-  opts: {
-    indentSize: 0,
-    comments: true,
-  },
-  expectedExact: `/* test: "color: red" */\na {\ncolor: blue;\n}`,
+  mappings: {"color: red": "color: blue"},
+  opts: {indentSize: 0, comments: true},
+  expected: `/* test: "color: red" */\na {\ncolor: blue;\n}`,
 }));
 
-test("$border 0", makeTest({
-  sources: [{css: `a {border: 0;}`}],
-  mappings: {
-    "$border: 0": "0",
-  },
-  expected: ``}));
+test("$border 0", makeTest({sources: [{css: `a {border: 0;}`}], mappings: {"$border: 0": "0"}, expected: ""}));
 
-test("$value in gradient hex", makeTest({
-  sources: [{css: `
+const gradientSources = [{css: `
     a:hover {
       background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
     }
-  `}],
-  mappings: {
-    "$value: #1074e7": "#123",
-  },
+  `}];
+
+test("$value in gradient hex", makeTest({
+  sources: gradientSources,
+  mappings: {"$value: #1074e7": "#123"},
   expected: `
   a:hover {
     background: linear-gradient(to bottom, #123, rgb(255, 255, 255, 0));
@@ -433,14 +325,8 @@ test("$value in gradient hex", makeTest({
 `}));
 
 test("$value in gradient rgb", makeTest({
-  sources: [{css: `
-    a:hover {
-      background: linear-gradient(to bottom, #1074e7, rgb(255,255,255,0))
-    }
-  `}],
-  mappings: {
-    "$value: rgb(255,255,255,0)": "#123",
-  },
+  sources: gradientSources,
+  mappings: {"$value: rgb(255,255,255,0)": "#123"},
   expected: `
   a:hover {
     background: linear-gradient(to bottom, #1074e7, #123);
@@ -453,9 +339,7 @@ test("$value hsla", makeTest({
       background: linear-gradient(to bottom, hsla(0,0%,100%,.125), rgb(255,255,255,0))
     }
   `}],
-  mappings: {
-    "$value: hsla(0,0%,100%,.125)": "#123",
-  },
+  mappings: {"$value: hsla(0,0%,100%,.125)": "#123"},
   expected: `
   a:hover {
     background: linear-gradient(to bottom, #123, rgb(255, 255, 255, 0));
@@ -470,9 +354,7 @@ test("$value: $monochrome", makeTest({
       width: calc(1px);
     }
   `}],
-  mappings: {
-    "$value: $monochrome": "#123",
-  },
+  mappings: {"$value: $monochrome": "#123"},
   expected: `
   a:hover {
     background: linear-gradient(to bottom, #1074e7, #123);
@@ -485,9 +367,7 @@ test("$value: $monochrome - $invert", makeTest({
       background: linear-gradient(to bottom, #1074e7, rgb(40,40,40,0), currentcolor)
     }
   `}],
-  mappings: {
-    "$value: $monochrome": "$invert",
-  },
+  mappings: {"$value: $monochrome": "$invert"},
   expected: `
     a:hover {
       background: linear-gradient(to bottom, #1074e7, #d7d7d700, currentcolor);
@@ -501,9 +381,7 @@ test("currentcolor", makeTest({
       border-top: 1px solid !important;
     }
   `}],
-  mappings: {
-    "$border: currentcolor": "currentcolor",
-  },
+  mappings: {"$border: currentcolor": "currentcolor"},
   expected: `
     a {
       border-color: currentcolor !important;
@@ -516,10 +394,7 @@ test("multivalue", makeTest({
       border-color: red red green;
     }
   `}],
-  mappings: {
-    "$value: red": "blue",
-    "$value: green": "yellow",
-  },
+  mappings: {"$value: red": "blue", "$value: green": "yellow"},
   expected: `
     a {
       border-color: blue blue yellow;
@@ -532,11 +407,7 @@ test("multivalue 2", makeTest({
       border-color: #eee #eee #fff red;
     }
   `}],
-  mappings: {
-    "$border: #fff": "#222",
-    "$border: #eee": "#333",
-    "$value: red": "#444",
-  },
+  mappings: {"$border: #fff": "#222", "$border: #eee": "#333", "$value: red": "#444"},
   expected: `
     a {
       border-color: #333 #333 #222 #444;
@@ -549,9 +420,7 @@ test("border rgba", makeTest({
       border-color: rgba(27,31,35,.15);
     }
   `}],
-  mappings: {
-    "$border: rgba(27,31,35,.15)": "#222",
-  },
+  mappings: {"$border: rgba(27,31,35,.15)": "#222"},
   expected: `
     a {
       border-color: #222;
@@ -564,9 +433,7 @@ test("gradient", makeTest({
       background-image: linear-gradient(#54a3ff,#006eed);
     }
   `}],
-  mappings: {
-    "$background: linear-gradient(#54a3ff,#006eed)": "linear-gradient(#111,#111)",
-  },
+  mappings: {"$background: linear-gradient(#54a3ff,#006eed)": "linear-gradient(#111,#111)"},
   expected: `
     a {
       background-image: linear-gradient(#111, #111);
@@ -579,9 +446,7 @@ test("gradient hsla", makeTest({
       background-image: linear-gradient(hsla(0,10%,10%,.5),#222);
     }
   `}],
-  mappings: {
-    "$value: hsla(0,10%,10%,.5)": "#111",
-  },
+  mappings: {"$value: hsla(0,10%,10%,.5)": "#111"},
   expected: `
     a {
       background-image: linear-gradient(#111, #222);
@@ -594,9 +459,7 @@ test("$box-shadow", makeTest({
       box-shadow: 0 0 1px linear-gradient(hsla(0,10%,10%,.5),#222);
     }
   `}],
-  mappings: {
-    "$box-shadow: hsla(0,10%,10%,.5)": "#111",
-  },
+  mappings: {"$box-shadow: hsla(0,10%,10%,.5)": "#111"},
   expected: `
     a {
       box-shadow: 0 0 1px linear-gradient(#111, #222);
@@ -609,9 +472,7 @@ test("$box-shadow 2", makeTest({
       box-shadow: 0 1px 15px rgba(27,31,35,.15) !important;
     }
   `}],
-  mappings: {
-    "$box-shadow: rgba(27,31,35,.15)": "#111",
-  },
+  mappings: {"$box-shadow: rgba(27,31,35,.15)": "#111"},
   expected: `
     a {
       box-shadow: 0 1px 15px #111 !important;
@@ -625,10 +486,7 @@ test("border-bottom-color", makeTest({
       border-top: 1px solid green;
     }
   `}],
-  mappings: {
-    "$border: blue": "red",
-    "$border: green": "yellow",
-  },
+  mappings: {"$border: blue": "red", "$border: green": "yellow"},
   expected: `
     a {
       border-bottom-color: red;
@@ -644,9 +502,7 @@ test("border 2", makeTest({
       border-radius: 6px;
     }
   `}],
-  mappings: {
-    "$border: red": "yellow",
-  },
+  mappings: {"$border: red": "yellow"},
   expected: `
     a {
       border-color: yellow;
@@ -659,67 +515,45 @@ test("border 3", makeTest({
       border:1px solid red;
     }
   `}],
-  mappings: {
-    "$value: red": "yellow",
-  },
+  mappings: {"$value: red": "yellow"},
   expected: `
     a {
       border-color: yellow;
     }
 `}));
 
-test("border 4", makeTest({
+test.each(Object.entries({
+  "border 4": "border:1px solid red;",
+  "border 5": "border-color: red;",
+}))("%s", (_name, declaration) => makeTest({
   sources: [{css: `
     @media (min-width:544px) {
       a {
-        border:1px solid red;
+        ${declaration}
       }
     }
   `}],
-  mappings: {
-    "$value: red": "yellow",
-  },
+  mappings: {"$value: red": "yellow"},
   expected: `
     @media (min-width:544px) {
       a {
         border-color: yellow;
       }
     }
-`}));
+`})());
 
-test("border 5", makeTest({
-  sources: [{css: `
-    @media (min-width:544px) {
-      a {
-        border-color: red;
-      }
-    }
-  `}],
-  mappings: {
-    "$value: red": "yellow",
-  },
-  expected: `
-    @media (min-width:544px) {
-      a {
-        border-color: yellow;
-      }
-    }
-`}));
-
-test("precedence 1", makeTest({
-  sources: [{css: `
+const precedenceSources = [{css: `
     @media (min-width:544px) {
       a {
         border-color: red;
         background-color: red;
       }
     }
-  `}],
-  mappings: {
-    "$value: red": "yellow",
-    "$border: red": "green",
-    "$background: red": "green",
-  },
+  `}];
+
+test("precedence 1", makeTest({
+  sources: precedenceSources,
+  mappings: {"$value: red": "yellow", "$border: red": "green", "$background: red": "green"},
   expected: `
     @media (min-width:544px) {
       a {
@@ -730,14 +564,7 @@ test("precedence 1", makeTest({
 `}));
 
 test("precedence 2", makeTest({
-  sources: [{css: `
-    @media (min-width:544px) {
-      a {
-        border-color: red;
-        background-color: red;
-      }
-    }
-  `}],
+  sources: precedenceSources,
   mappings: {
     "$value: red": "blue",
     "$border: red": "green",
@@ -762,10 +589,7 @@ test("precedence 3", makeTest({
       }
     }
   `}],
-  mappings: {
-    "$value: red": "blue",
-    "$border: red": "green",
-  },
+  mappings: {"$value: red": "blue", "$border: red": "green"},
   expected: `
     @media (min-width:544px) {
       a {
@@ -782,9 +606,7 @@ test("background longhand", makeTest({
       }
     }
   `}],
-  mappings: {
-    "$value: red": "green",
-  },
+  mappings: {"$value: red": "green"},
   expected: `
     @media (min-width:544px) {
       a {
@@ -800,9 +622,7 @@ test("transparency", makeTest({
       background-color: rgba(255,255,255,0);
     }
   `}],
-  mappings: {
-    "$value: transparent": "transparent",
-  },
+  mappings: {"$value: transparent": "transparent"},
   expected: `
     a {
       color: transparent;
@@ -815,30 +635,26 @@ test("transparency 2", makeTest({
       background-image: linear-gradient(180deg, #fff, rgba(245, 245, 245, 0));
     }
   `}],
-  mappings: {
-    "$value: #fff": "#222",
-    "$value: transparent": "transparent",
-  },
+  mappings: {"$value: #fff": "#222", "$value: transparent": "transparent"},
   expected: `
     a {
       background-image: linear-gradient(180deg, #222, rgba(245, 245, 245, 0));
     }
 `}));
 
-test("uso placeholder", makeTest({
+test.each(Object.entries({
+  "uso placeholder": "/*[[base-color]]*/",
+  "no whitespace after uso var": "20/*[[base-color]]*/20",
+  "whitespace after uso var": "20 /*[[base-color]]*/ 20",
+}))("%s", (_name, value) => makeTest({
   sources: [{css: `
     a {
       background: red;
     }
   `}],
-  mappings: {
-    "$value: red": "/*[[base-color]]*/",
-  },
-  expected: `
-    a {
-      background: /*[[base-color]]*/;
-    }
-`}));
+  mappings: {"$value: red": value},
+  expected: `a {\n  background: ${value};\n}`,
+})());
 
 test("whitespace after uso important", makeTest({
   sources: [{css: `
@@ -846,42 +662,10 @@ test("whitespace after uso important", makeTest({
       background: red !important;
     }
   `}],
-  mappings: {
-    "$value: red": "/*[[base-color]]*/",
-  },
+  mappings: {"$value: red": "/*[[base-color]]*/"},
   expected: `
     a {
       background: /*[[base-color]]*/ !important;
-    }
-`}));
-
-test("no whitespace after uso var", makeTest({
-  sources: [{css: `
-    a {
-      background: red;
-    }
-  `}],
-  mappings: {
-    "$value: red": "20/*[[base-color]]*/20",
-  },
-  expected: `
-    a {
-      background: 20/*[[base-color]]*/20;
-    }
-`}));
-
-test("whitespace after uso var", makeTest({
-  sources: [{css: `
-    a {
-      background: red;
-    }
-  `}],
-  mappings: {
-    "$value: red": "20 /*[[base-color]]*/ 20",
-  },
-  expected: `
-    a {
-      background: 20 /*[[base-color]]*/ 20;
     }
 `}));
 
@@ -891,9 +675,7 @@ test("complex uso var", makeTest({
       box-shadow: 2px 0 0 red inset;
     }
   `}],
-  mappings: {
-    "$value: red": "/*[[base-color]]*/",
-  },
+  mappings: {"$value: red": "/*[[base-color]]*/"},
   expected: `
     a {
       box-shadow: 2px 0 0 /*[[base-color]]*/ inset;
@@ -953,9 +735,7 @@ test("vars", makeTest({
       }
     }
   `}],
-  mappings: {
-    "$border: #fff": "var(--border-color)",
-  },
+  mappings: {"$border: #fff": "var(--border-color)"},
   expected: `
     @media (min-width: 777px) {
       a {
@@ -972,9 +752,7 @@ test("radial with var", makeTest({
       }
     }
   `}],
-  mappings: {
-    "$background: #ffffff": "var(--border-color)",
-  },
+  mappings: {"$background: #ffffff": "var(--border-color)"},
   expected: `
     @media (min-width: 777px) {
       a {
@@ -995,12 +773,8 @@ test("keep, including prototype names and @ in values", makeTest({
         grid-area: x@y}
     }
   `}],
-  mappings: {
-    "$background: #ffffff": "var(--border-color)",
-  },
-  opts: {
-    keep: true,
-  },
+  mappings: {"$background: #ffffff": "var(--border-color)"},
+  opts: {keep: true},
   expected: `
     @media (min-width: 777px) {
       a {
@@ -1020,13 +794,9 @@ test("unknown properties", makeTest({
       *background: red;
     }
   `}],
-  mappings: {
-    "$value: red": "green",
-  },
-  opts: {
-    validate: true,
-  },
-  expected: ``,
+  mappings: {"$value: red": "green"},
+  opts: {validate: true},
+  expected: "",
 }));
 
 test("css vars", makeTest({
@@ -1035,12 +805,8 @@ test("css vars", makeTest({
       --var: red;
     }
   `}],
-  mappings: {
-    "$value: red": "green",
-  },
-  opts: {
-    validate: true,
-  },
+  mappings: {"$value: red": "green"},
+  opts: {validate: true},
   expected: `
     a {
       --var: green;
@@ -1060,13 +826,8 @@ test("css vars 2", makeTest({
       color: var(--blue);
     }
   `}],
-  mappings: {
-    "$value: red": "green",
-    "$value: blue": "yellow",
-  },
-  opts: {
-    validate: true,
-  },
+  mappings: {"$value: red": "green", "$value: blue": "yellow"},
+  opts: {validate: true},
   expected: `
     :root {
       --red: green;
@@ -1074,21 +835,19 @@ test("css vars 2", makeTest({
     }
 `}));
 
-test("invalid property - validate", makeTest({
-  sources: [{css: `
+const invalidPropertySources = [{css: `
     a {
       border: 1px solid red;
       *background: red;
       _background: red;
       !background: red;
     }
-  `}],
-  mappings: {
-    "$value: red": "yellow",
-  },
-  opts: {
-    validate: true,
-  },
+  `}];
+
+test("invalid property - validate", makeTest({
+  sources: invalidPropertySources,
+  mappings: {"$value: red": "yellow"},
+  opts: {validate: true},
   expected: `
     a {
       border-color: yellow;
@@ -1096,17 +855,8 @@ test("invalid property - validate", makeTest({
 `}));
 
 test("invalid property - no validate", makeTest({
-  sources: [{css: `
-    a {
-      border: 1px solid red;
-      *background: red;
-      _background: red;
-      !background: red;
-    }
-  `}],
-  mappings: {
-    "$value: red": "yellow",
-  },
+  sources: invalidPropertySources,
+  mappings: {"$value: red": "yellow"},
   expected: `
     a {
       border-color: yellow;
@@ -1122,9 +872,7 @@ test("whitespace after uso var 2", makeTest({
       border-color: var(--border-color);
     }
   `}],
-  mappings: {
-    "$value: var(--border-color)": "var(--border-color)",
-  },
+  mappings: {"$value: var(--border-color)": "var(--border-color)"},
   expected: `
     a {
       border-color: var(--border-color);
@@ -1137,13 +885,8 @@ test("selector split", makeTest({
       color: red;
     }
   `}],
-  mappings: {
-    "$value: red": "blue",
-  },
-  opts: {
-    ignoreSelectors: [/\.ignored/],
-    stylistic: true,
-  },
+  mappings: {"$value: red": "blue"},
+  opts: {ignoreSelectors: [/\.ignored/], stylistic: true},
   expected: `
     .w-1\\/2, .x\\>y, :not(.b, .c), [title="a>b"], d > e,
     html.octotree-gh[data-octotree-theme]:not([data-octotree-theme=sidebar]) main [style="background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));"] {
