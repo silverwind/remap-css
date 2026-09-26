@@ -536,9 +536,11 @@ function makeComment(text: string): Comment {
   });
 }
 
-function assignNewColor(normalizedColor: string, newValue: string): string {
+function assignNewColor(normalizedColor: string, newValue: string): string | null {
   if (newValue === "$invert") {
-    const [r, g, b, alpha] = /^#(..)(..)(..)(..)$/.exec(normalizedColor)!.slice(1);
+    const channels = /^#(..)(..)(..)(..)$/.exec(normalizedColor);
+    if (!channels) return null;
+    const [r, g, b, alpha] = channels.slice(1);
     return `#${[r, g, b].map(hex => (255 - Number.parseInt(hex, 16)).toString(16).padStart(2, "0")).join("")}${alpha}`;
   } else {
     return newValue;

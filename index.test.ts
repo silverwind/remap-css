@@ -453,7 +453,7 @@ test("$value: $monochrome", makeTest({
 test("$value: $monochrome - $invert", makeTest({
   sources: [{css: `
     a:hover {
-      background: linear-gradient(to bottom, #1074e7, rgb(40,40,40,0))
+      background: linear-gradient(to bottom, #1074e7, rgb(40,40,40,0), currentcolor)
     }
   `}],
   mappings: {
@@ -461,7 +461,7 @@ test("$value: $monochrome - $invert", makeTest({
   },
   expected: `
     a:hover {
-      background: linear-gradient(to bottom, #1074e7, #d7d7d700);
+      background: linear-gradient(to bottom, #1074e7, #d7d7d700, currentcolor);
     }
 `}));
 
