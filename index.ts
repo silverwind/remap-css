@@ -299,13 +299,15 @@ function rewriteSelectors(selectors: Array<string>, opts: ResolvedOptions, src: 
 
   for (let selector of selectors) {
     if (opts.stylistic) {
-      selector = selector
+      const parts = selector.split(/(\\.|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/);
+      selector = parts.map((part, index) => index % 2 ? `\uE000${index}\uE000` : part).join("")
         .replace(/\+/g, " + ")
         .replace(/(~)([^=])/g, (_, m1, m2) => ` ${m1} ${m2}`)
         .replace(/>/g, " > ")
         .replace(/ {2,}/g, " ")
         .replace(/'/g, `"`)
-        .replace(/([^:]):(before|after)/g, (_, m1, m2) => `${m1}::${m2}`);
+        .replace(/([^:]):(before|after)/g, (_, m1, m2) => `${m1}::${m2}`)
+        .replace(/\uE000([0-9]+)\uE000/g, (_, index) => parts[index].replace(/^'([^"]*)'$/, `"$1"`));
     }
 
     if (src.prefix && !/^[0-9]+%$/.test(selector)) { // ignore keyframes steps
