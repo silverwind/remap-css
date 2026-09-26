@@ -241,6 +241,8 @@ function memoize<Result>(fn: (arg: string) => Result): (arg: string) => Result {
 
 const atRulesWithNoSelectors = new Set(["keyframes"]);
 const uniq = (arr: Array<string | Array<string>>) => Array.from(new Set(arr));
+const splitSelectors = (str: string) => postcss.list.comma(str) // ", " inside pseudo-class lists keeps GitHub-Dark's output stable
+  .map(selector => selector.replace(/(\\.|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|\s*,\s*/g, (_, kept) => kept || ", "));
 const varRe = /var\(--(?!uso-var-expanded).+?\)/;
 const knownProperties = new Set(knownCssProperties.all);
 
@@ -691,7 +693,7 @@ const plugin = (src: Source, declMappings: DeclMappings, colorMappings: ColorMap
         });
 
         if (matchedDeclStrings.length) {
-          const newSelectors = rewriteSelectors(node.selectors, opts, src)
+          const newSelectors = rewriteSelectors(splitSelectors(node.selector), opts, src)
             .filter(selector => opts.ignoreSelectors.every(re => !re.test(selector)));
 
           if (newSelectors.length) {

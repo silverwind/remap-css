@@ -1141,7 +1141,7 @@ test("selector split", makeTest({
     stylistic: true,
   },
   expected: `
-    .w-1\\/2, .x\\>y, :not(.b,.c), [title="a>b"], d > e,
+    .w-1\\/2, .x\\>y, :not(.b, .c), [title="a>b"], d > e,
     html.octotree-gh[data-octotree-theme]:not([data-octotree-theme=sidebar]) main [style="background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));"] {
       color: blue;
     }
