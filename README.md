@@ -35,7 +35,7 @@ Returns a `Promise` that resolves to a CSS string.
   - `source`: *Object*
     - `css`: *string* A CSS string
     - `prefix`: *string* A CSS selector to be prefixed to all output rules
-    - `match`: *Array* An array of plain CSS selectors that prevent a prefix addition on exact match
+    - `match`: *Array* An array of plain CSS selectors. Selectors whose first compound shares a simple selector with one of them get that compound repeated instead of the prefix
     - `name`: *string* Optional name used in comments
 - `mappings`: *Object* CSS declaration value-to-value mapping. The key is either an exact match CSS declaration or a special rule starting with `$`. The value is a replacement declaration or a replacement value in the case of a special rule.
 - `opts`: *Object*

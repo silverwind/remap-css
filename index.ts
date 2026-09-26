@@ -176,7 +176,7 @@ export type Source = {
   css: string,
   /** A CSS selector to be prefixed to all output rules. */
   prefix?: string,
-  /** An array of plain CSS selectors that prevent a prefix addition on exact match. */
+  /** An array of plain CSS selectors. Selectors whose first compound shares a simple selector with one of them get that compound repeated instead of the prefix. */
   match?: Array<string>,
   /** Optional name used in comments. */
   name?: string,
