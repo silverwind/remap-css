@@ -797,7 +797,7 @@ export default async function remapCss(sources: Array<Source>, mappings: Record<
   try {
     output = (await perfectionist.process(output, formatOpts)).css;
   } catch { // perfectionist's postcss 5 parser fails on some valid css, like `@` in values
-    output = (await perfectionist.process(output, {...formatOpts, parser: postcssSafeParser})).css;
+    output = (await perfectionist.process(output, {...formatOpts, parser: postcss.parse})).css;
   }
 
   // move comments to their own line
