@@ -247,6 +247,16 @@ test("atrules comments", makeTest({
         background: green;
       }
     }
+    @supports (display: grid) {
+      @media print {
+        c {
+          background: red;
+        }
+      }
+    }
+    d {
+      background: green;
+    }
   `}],
   mappings: {
     "$background: red": "blue",
@@ -255,7 +265,7 @@ test("atrules comments", makeTest({
   opts: {
     comments: true,
   },
-  expectedExact: `/* source #0: "red", "green" */\n@media screen {\n  a {\n    background-color: blue;\n  }\n  b {\n    background-color: yellow;\n  }\n}`,
+  expectedExact: `/* source #0: "red", "green" */\n@media screen {\n  a {\n    background-color: blue;\n  }\n  b {\n    background-color: yellow;\n  }\n}\n@supports (display: grid) {\n  /* source #0: "red" */\n  @media print {\n    c {\n      background-color: blue;\n    }\n  }\n}\n/* source #0: "green" */\nd {\n  background-color: yellow;\n}`,
 }));
 
 test("keyframe atrule, no prefix", makeTest({

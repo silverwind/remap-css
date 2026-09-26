@@ -703,7 +703,7 @@ const plugin = (src: Source, declMappings: DeclMappings, colorMappings: ColorMap
                 const prevDeclStrings = prevNode.text.match(/".+?"/g)!;
                 prevNode.text = `${commentStart}: ${uniq([...prevDeclStrings, ...matchedDeclStrings]).join(", ")}`;
               } else {
-                root.insertBefore(targetNode, makeComment(`${commentStart}: ${uniq(matchedDeclStrings).join(", ")}`));
+                targetNode.before(makeComment(`${commentStart}: ${uniq(matchedDeclStrings).join(", ")}`));
               }
             }
 
