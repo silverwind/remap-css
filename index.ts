@@ -804,7 +804,7 @@ export default async function remapCss(sources: Array<Source>, mappings: Record<
   }
 
   // move comments to their own line
-  output = output.replace(/\} \/\*/g, "}\n/*");
+  output = output.replace(/\} \/\*/g, "}\n/*").replace(/^( +)\}\/\*/gm, (_, indent) => `${indent}}\n${indent}/*`);
 
   // put selectors on the same line
   output = output.replace(/,\n( *)/g, (_, m1) => `,${m1.trim()} `);
