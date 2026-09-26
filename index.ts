@@ -378,7 +378,7 @@ function hexFromColorFunction(node: ValueNode): string | null {
     const [r, g, b, a] = node.nodes.filter(node => node.type === "word").map(node => node.value);
     const [rNum, gNum, bNum] = [r, g, b].map(Number);
     const alpha = alphaToHex(a);
-    if (![rNum, gNum, bNum].every(Number.isFinite) || alpha === null) return null;
+    if (!rNum || !gNum || !bNum || alpha === null) return null; // a zero channel skips normalization, GitHub-Dark's output depends on it
     return normalizeHexColor(`#${colorConvert.rgb.hex(rNum, gNum, bNum).toLowerCase()}${alpha}`);
   } else if (hslFunctions.has(node.value)) {
     const [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => node.value);

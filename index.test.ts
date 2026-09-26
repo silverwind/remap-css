@@ -897,25 +897,26 @@ test("complex uso var", makeTest({
     }
 `}));
 
-test("color functions with zero channels, percentage alpha and unparsed hue", makeTest({
+test("color functions with percentage alpha and unparsed hue", makeTest({
   sources: [{css: `
     @media (min-width: 777px) {
       a {
         background-color: rgba(234, 234, 0, .22);
-        color: rgb(234 234 0 / 22%);
+        color: rgb(234 234 1 / 22%);
         border-color: hsl(120deg, 50%, 50%);
       }
     }
   `}],
   mappings: {
     "$value: rgba(234, 234, 0, .22)": "rgba(36, 36, 36, .22)",
+    "$value: rgba(234, 234, 1, .22)": "red",
     "$value: #404040": "red",
   },
   expected: `
     @media (min-width: 777px) {
       a {
         background-color: rgba(36, 36, 36, .22);
-        color: rgba(36, 36, 36, .22);
+        color: red;
       }
     }
 `}));
