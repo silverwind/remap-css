@@ -335,9 +335,10 @@ function normalizeHexColor(value: string): string {
   return value;
 }
 
-function alphaToHex(alpha: number | string | undefined): string {
+function alphaToHex(alpha: string | undefined): string | null {
   if (alpha === undefined) return "";
-  let value = Number(alpha);
+  let value = alpha.endsWith("%") ? Number(alpha.slice(0, -1)) / 100 : Number(alpha);
+  if (Number.isNaN(value)) return null;
   if (value > 1) value = 1;
   if (value < 0) value = 0;
   return Math.floor(value * 255).toString(16).padStart(2, "0");
@@ -372,16 +373,17 @@ const hslFunctions = new Set(["hsl", "hsla"]);
 
 function hexFromColorFunction(node: ValueNode): string | null {
   if (rgbFunctions.has(node.value)) {
-    const [r, g, b, a] = node.nodes.filter(node => node.type === "word").map(node => Number(node.value));
-    if (!r || !g || !b) return null;
-    return normalizeHexColor(`#${colorConvert.rgb.hex(r, g, b).toLowerCase()}${alphaToHex(a)}`);
+    const [r, g, b, a] = node.nodes.filter(node => node.type === "word").map(node => node.value);
+    const [rNum, gNum, bNum] = [r, g, b].map(Number);
+    const alpha = alphaToHex(a);
+    if (![rNum, gNum, bNum].every(Number.isFinite) || alpha === null) return null;
+    return normalizeHexColor(`#${colorConvert.rgb.hex(rNum, gNum, bNum).toLowerCase()}${alpha}`);
   } else if (hslFunctions.has(node.value)) {
     const [h, s, l, a] = node.nodes.filter(node => node.type === "word").map(node => node.value);
-    if (!h || !s || !l) return null;
-    const hNum = Number(h);
-    const sNum = Number(s.replace("%", ""));
-    const lNum = Number(l.replace("%", ""));
-    return normalizeHexColor(`#${colorConvert.hsl.hex(hNum, sNum, lNum).toLowerCase()}${alphaToHex(a)}`);
+    const [hNum, sNum, lNum] = [h, s, l].map(channel => Number(channel?.replace("%", "")));
+    const alpha = alphaToHex(a);
+    if (![hNum, sNum, lNum].every(Number.isFinite) || alpha === null) return null;
+    return normalizeHexColor(`#${colorConvert.hsl.hex(hNum, sNum, lNum).toLowerCase()}${alpha}`);
   }
   return null;
 }
