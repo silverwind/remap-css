@@ -94,14 +94,11 @@ test("order", makeTest({
   `}],
   mappings: {"background: yellow": "background: green", "background: red": "background: blue"},
   expected: `
-    a {
+    a, d {
       background: blue;
     }
     b, c {
       background: green;
-    }
-    d {
-      background: blue;
     }
 `}));
 

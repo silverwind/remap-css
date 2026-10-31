@@ -16,7 +16,7 @@
   "files": [
     "dist"
   ],
-  "packageManager": "pnpm@12.6.0",
+  "packageManager": "pnpm@12.16.1",
   "engines": {
     "node": ">=24",
     "bun": "*"
@@ -30,28 +30,28 @@
     "csstree-validator": "4.0.1",
     "known-css-properties": "0.37.0",
     "perfectionist": "2.4.0",
-    "postcss": "8.5.28",
-    "postcss-discard-duplicates": "9.0.3",
-    "postcss-discard-empty": "9.0.3",
-    "postcss-discard-overridden": "9.0.3",
-    "postcss-merge-longhand": "9.0.4",
-    "postcss-merge-rules": "9.0.4",
+    "postcss": "8.5.32",
+    "postcss-discard-duplicates": "9.0.7",
+    "postcss-discard-empty": "9.0.8",
+    "postcss-discard-overridden": "9.0.6",
+    "postcss-merge-longhand": "9.4.0",
+    "postcss-merge-rules": "9.1.5",
     "postcss-safe-parser": "7.1.0",
-    "postcss-unique-selectors": "9.0.3",
+    "postcss-unique-selectors": "9.0.6",
     "postcss-value-parser": "4.2.0"
   },
   "devDependencies": {
-    "@types/node": "26.6.3",
-    "eslint": "10.11.0",
+    "@types/node": "26.6.6",
+    "eslint": "10.14.0",
     "eslint-config-silverwind": "155.2.0",
     "tsdown": "0.23.4",
     "tsdown-config-silverwind": "4.2.0",
     "typescript": "7.0.2",
-    "typescript-config-silverwind": "21.0.1",
-    "updates": "19.0.2",
+    "typescript-config-silverwind": "21.0.2",
+    "updates": "20.0.0",
     "updates-config-silverwind": "4.1.0",
-    "versions": "15.5.1",
-    "vitest": "5.0.2",
-    "vitest-config-silverwind": "12.0.5"
+    "versions": "15.5.2",
+    "vitest": "5.0.5",
+    "vitest-config-silverwind": "12.0.6"
   }
 }
